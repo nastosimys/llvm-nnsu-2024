@@ -5,18 +5,21 @@
 
 using namespace clang;
 
-
 class DeprecatedVisitor : public RecursiveASTVisitor<DeprecatedVisitor> {
 public:
-  explicit DeprecatedVisitor(ASTContext *Context) : Context(Context) {} 
+  explicit DeprecatedVisitor(ASTContext *Context) : Context(Context) {}
   bool VisitFunctionDecl(FunctionDecl *fDecl) {
-    if (fDecl->getNameInfo().getAsString().find("deprecated") != std::string::npos) {
+    if (fDecl->getNameInfo().getAsString().find("deprecated") !=
+        std::string::npos) {
       DiagnosticsEngine &diagn = Context->getDiagnostics();
-      unsigned diagnID = diagn.getCustomDiagID(DiagnosticsEngine::Warning, "The function name has 'deprecated'");
-      diagn.Report(fDecl->getLocation(), diagnID) << fDecl->getNameInfo().getAsString();
+      unsigned diagnID = diagn.getCustomDiagID(
+          DiagnosticsEngine::Warning, "The function name has 'deprecated'");
+      diagn.Report(fDecl->getLocation(), diagnID)
+          << fDecl->getNameInfo().getAsString();
     }
     return true;
   }
+
 private:
   ASTContext *Context;
 };
@@ -27,19 +30,24 @@ public:
   void HandleTranslationUnit(ASTContext &Context) override {
     Visitor.TraverseDecl(Context.getTranslationUnitDecl());
   }
+
 private:
   DeprecatedVisitor Visitor;
 };
 
 class DeprecatedAction : public PluginASTAction {
 protected:
-  std::unique_ptr<ASTConsumer> CreateASTConsumer(CompilerInstance &Compiler, llvm::StringRef InFile) override {
+  std::unique_ptr<ASTConsumer>
+  CreateASTConsumer(CompilerInstance &Compiler,
+                    llvm::StringRef InFile) override {
     return std::make_unique<DeprecatedConsumer>(&Compiler.getASTContext());
   }
-  bool ParseArgs(const CompilerInstance &CI, const std::vector<std::string> &args) override {
+  bool ParseArgs(const CompilerInstance &CI,
+                 const std::vector<std::string> &args) override {
     return true;
   }
 };
 
 static FrontendPluginRegistry::Add<DeprecatedAction>
-    X("deprecated_plugin", "adds warning if there is a 'deprecated' in the function name");
+    X("deprecated_plugin",
+      "adds warning if there is a 'deprecated' in the function name");
