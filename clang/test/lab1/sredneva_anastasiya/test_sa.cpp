@@ -19,3 +19,10 @@ void deprfunction();
 
 // CHECK-NOT: warning: The function name has 'deprecated'
 void foo();
+
+class Test {
+	// CHECK: warning: The function name has 'deprecated'
+	void is_deprecated_function();
+	// CHECK-NOT: warning: The function name has 'deprecated'
+	void depfunc();
+};

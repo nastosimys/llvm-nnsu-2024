@@ -7,43 +7,58 @@ using namespace clang;
 
 class DeprecatedVisitor : public RecursiveASTVisitor<DeprecatedVisitor> {
 public:
-  explicit DeprecatedVisitor(ASTContext *Context) : Context(Context) {}
+  explicit DeprecatedVisitor(bool isWarning) : isWarning(isWarning) {}
   bool VisitFunctionDecl(FunctionDecl *fDecl) {
     if (fDecl->getNameInfo().getAsString().find("deprecated") !=
         std::string::npos) {
-      DiagnosticsEngine &diagn = Context->getDiagnostics();
-      unsigned diagnID = diagn.getCustomDiagID(
-          DiagnosticsEngine::Warning, "The function name has 'deprecated'");
-      diagn.Report(fDecl->getLocation(), diagnID)
-          << fDecl->getNameInfo().getAsString();
+      DiagnosticsEngine &diagn = fDecl->getASTContext().getDiagnostics();
+      if (isWarning) {
+        unsigned diagnID = diagn.getCustomDiagID(
+            DiagnosticsEngine::Warning, "The function name has 'deprecated'");
+        diagn.Report(fDecl->getLocation(), diagnID)
+            << fDecl->getNameInfo().getAsString();
+      } else {
+        unsigned diagnID = diagn.getCustomDiagID(
+            DiagnosticsEngine::Error, "The function name has 'deprecated'");
+        diagn.Report(fDecl->getLocation(), diagnID)
+            << fDecl->getNameInfo().getAsString();
+      }
     }
     return true;
   }
 
 private:
-  ASTContext *Context;
+  bool isWarning;
 };
 
 class DeprecatedConsumer : public ASTConsumer {
 public:
-  explicit DeprecatedConsumer(ASTContext *Context) : Visitor(Context) {}
+  explicit DeprecatedConsumer(bool isWarning) : isWarning(isWarning) {}
   void HandleTranslationUnit(ASTContext &Context) override {
+    DeprecatedVisitor Visitor(isWarning);
     Visitor.TraverseDecl(Context.getTranslationUnitDecl());
   }
 
 private:
-  DeprecatedVisitor Visitor;
+  bool isWarning;
 };
 
 class DeprecatedAction : public PluginASTAction {
+  bool isWarning = true;
+
 protected:
   std::unique_ptr<ASTConsumer>
   CreateASTConsumer(CompilerInstance &Compiler,
                     llvm::StringRef InFile) override {
-    return std::make_unique<DeprecatedConsumer>(&Compiler.getASTContext());
+    return std::make_unique<DeprecatedConsumer>(isWarning);
   }
   bool ParseArgs(const CompilerInstance &CI,
                  const std::vector<std::string> &args) override {
+    for (const auto &arg : args) {
+      if (arg == "-error") {
+        isWarning = false;
+      }
+    }
     return true;
   }
 };
