@@ -83,7 +83,6 @@ for.end:                                          ; preds = %for.cond
 ; CHECK: declare void @loop_end()
 
 
-
 ; void loop_start();
 ; void loop_end();
 
@@ -187,14 +186,13 @@ if.end:                                           ; preds = %while.end, %entry
 ; CHECK-NEXT: }
 
 
-
 ;int no_loop(int n, int inv) {
-;    if (n > 0) {
-;        inv *= 2;
-;    } else {
-;        inv *= 4;
-;    }
-;    return inv;
+;	if (n > 0) {
+;		inv *= 2;
+;	} else {
+;		inv *= 4;
+;	}
+;	return inv;
 ;}
 
 define dso_local noundef i32 @_Z7no_loopii(i32 noundef %n, i32 noundef %inv) #0 {
@@ -252,22 +250,18 @@ if.end:                                           ; preds = %if.else, %if.then
 ; CHECK-NEXT: }
 
 
-
 ;void loop_start();
 ;void loop_end();
 
 ;int alreadyHaveLoopWrapper(int a) {
-;  int sum = 0;
-;  loop_start();
-;  for (int i = 0; i < 100; i++) {
-;    sum += a;
-;  }
-;  loop_end();
-;  return sum;
+;	 int sum = 0;
+;	 loop_start();
+;	 for (int i = 0; i < 100; i++) {
+;	 	 sum += a;
+;	 }
+;	 loop_end();
+;	 return sum;
 ;}
-
-declare void @loop_start()
-declare void @loop_end()
 
 define dso_local noundef i32 @_Z22alreadyHaveLoopWrapperi(i32 noundef %a) #0 {
 entry:
