@@ -17,17 +17,12 @@ struct LoopWrapperPass : public PassInfoMixin<LoopWrapperPass> {
         "loop_start", FunctionType::getVoidTy(F.getContext()));
     FunctionCallee loopEndFunc = F.getParent()->getOrInsertFunction(
         "loop_end", FunctionType::getVoidTy(F.getContext()));
-    for (auto &BB : F) {
-      if (Loop *L = LI.getLoopFor(&BB)) {
-        if (L->getHeader() == &BB) {
-          BasicBlock *Preheader = L->getLoopPreheader();
-          if (!Preheader) {
-            Preheader =
-                BasicBlock::Create(F.getContext(), "loop.preheader", &F, &BB);
-            BranchInst::Create(&BB, Preheader);
-          }
+    for (auto &L : LI) {
+      BasicBlock *Header = L->getHeader();
+      for (auto *Pred : predecessors(Header)) {
+        if (!L->contains(Pred)) {
           bool hasLoopStart = false;
-          for (auto &I : *Preheader) {
+          for (auto &I : *Pred) {
             if (auto *CI = dyn_cast<CallInst>(&I)) {
               if (CI->getCalledFunction() == loopStartFunc.getCallee()) {
                 hasLoopStart = true;
@@ -36,29 +31,32 @@ struct LoopWrapperPass : public PassInfoMixin<LoopWrapperPass> {
             }
           }
           if (!hasLoopStart) {
-            IRBuilder<> builder(&*Preheader->getTerminator());
+            IRBuilder<> builder(&*Pred->getTerminator());
             builder.CreateCall(loopStartFunc);
           }
         }
-        if (L->isLoopExiting(&BB)) {
-          for (auto it = succ_begin(&BB), e = succ_end(&BB); it != e; ++it) {
-            BasicBlock *Successor = *it;
-            if (!L->contains(Successor)) {
-              bool hasLoopEnd = false;
-              for (auto &I : *Successor) {
-                if (auto *CI = dyn_cast<CallInst>(&I)) {
-                  if (CI->getCalledFunction() == loopEndFunc.getCallee()) {
-                    hasLoopEnd = true;
-                    break;
-                  }
+      }
+      SmallVector<BasicBlock *, 8> ExitingBlocks;
+      L->getExitingBlocks(ExitingBlocks);
+      for (auto *ExitingBlock : ExitingBlocks) {
+        for (auto it = succ_begin(ExitingBlock), e = succ_end(ExitingBlock);
+             it != e; ++it) {
+          BasicBlock *Successor = *it;
+          if (!L->contains(Successor)) {
+            bool hasLoopEnd = false;
+            for (auto &I : *Successor) {
+              if (auto *CI = dyn_cast<CallInst>(&I)) {
+                if (CI->getCalledFunction() == loopEndFunc.getCallee()) {
+                  hasLoopEnd = true;
+                  break;
                 }
               }
-              if (!hasLoopEnd) {
-                IRBuilder<> builder(&*Successor->getFirstInsertionPt());
-                builder.CreateCall(loopEndFunc);
-              }
-              break;
             }
+            if (!hasLoopEnd) {
+              IRBuilder<> builder(&*Successor->getFirstInsertionPt());
+              builder.CreateCall(loopEndFunc);
+            }
+            break;
           }
         }
       }
