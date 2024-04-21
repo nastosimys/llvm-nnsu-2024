@@ -65,6 +65,7 @@ struct LoopWrapperPass : public PassInfoMixin<LoopWrapperPass> {
   }
   static bool isRequired() { return true; }
 };
+
 } // namespace
 
 extern "C" ::llvm::PassPluginLibraryInfo LLVM_ATTRIBUTE_WEAK
