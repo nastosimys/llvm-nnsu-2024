@@ -1,6 +1,33 @@
 # RUN: llc -mtriple x86_64-unknown-linux-gnu --load=%llvmshlibdir/X86SrednevaMulAddIntrinPass%shlibext -run-pass=x86-muladd-intrin-pass  %s -o - | FileCheck %s
 
+#test.cpp
+
+#__m128d muladd_test1(__m128d a, __m128d b, __m128d c) { return a * b + c; }
+
+#__m128d muladd_test2(__m128d a, __m128d b, __m128d c) { return a * c + b; }
+
+#__m128d muladd_test3(__m128d a, __m128d b, __m128d c) {
+#    __m128d neg = - ñ;
+#    return a * b + neg;
+#}
+
+#__m128d muladd_test4(__m128d a, __m128d b, __m128d c) {
+#    __m128d result = a * b + c;
+#    return result + a;
+#}
+
+#__m128d muladd_test5(__m128d a, __m128d b, __m128d c) { return a * b + c; }
+
+#__m128d muladd_test6(__m128d a, __m128d b, __m128d c) {
+#   __m128d tmp = a * b;
+#   __m128d tmp2 = b + a - c;
+#   return tmp + c + tmp2;
+#}
+
 --- |
+  ; ModuleID = 'test.ll'
+  source_filename = "test.cpp"
+
   target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
   target triple = "x86_64-unknown-linux-gnu"
 
