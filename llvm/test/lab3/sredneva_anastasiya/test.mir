@@ -96,12 +96,14 @@ body:             |
     %4:vr128 = nofpexcept ADDPDrr %3, %2, implicit $mxcsr
     $xmm0 = COPY %4
     RET 0, $xmm0
+
     ; CHECK: %2:vr128 = COPY $xmm2
     ; CHECK-NEXT: %1:vr128 = COPY $xmm1
     ; CHECK-NEXT: %0:vr128 = COPY $xmm0
     ; CHECK-NEXT: %4:vr128 = VFMADD213PDr %0, %1, %2, implicit $mxcsr
     ; CHECK-NEXT: $xmm0 = COPY %4
     ; CHECK-NEXT: RET 0, $xmm0
+
 ...
 ---
 name:            _Z12muladd_test2Dv2_dS_S_
@@ -132,12 +134,14 @@ body:             |
     %4:vr128 = nofpexcept ADDPDrr %3, %1, implicit $mxcsr
     $xmm0 = COPY %4
     RET 0, $xmm0
+
     ; CHECK: %2:vr128 = COPY $xmm2
     ; CHECK-NEXT: %1:vr128 = COPY $xmm1
     ; CHECK-NEXT: %0:vr128 = COPY $xmm0
     ; CHECK-NEXT: %4:vr128 = VFMADD213PDr %0, %2, %1, implicit $mxcsr
     ; CHECK-NEXT: $xmm0 = COPY %4
     ; CHECK-NEXT: RET 0, $xmm0
+
 ...
 ---
 name:            _Z12muladd_test3Dv2_dS_S_
@@ -168,6 +172,7 @@ body:             |
     %4:vr128 = nofpexcept SUBPDrr %3, %2, implicit $mxcsr
     $xmm0 = COPY %4
     RET 0, $xmm0
+
     ; CHECK: %2:vr128 = COPY $xmm2
     ; CHECK-NEXT: %1:vr128 = COPY $xmm1
     ; CHECK-NEXT: %0:vr128 = COPY $xmm0
@@ -175,6 +180,7 @@ body:             |
     ; CHECK-NEXT: %4:vr128 = nofpexcept SUBPDrr %3, %2, implicit $mxcsr
     ; CHECK-NEXT: $xmm0 = COPY %4
     ; CHECK-NEXT: RET 0, $xmm0
+
 ...
 ---
 name:            _Z12muladd_test4Dv2_dS_S_
@@ -207,6 +213,7 @@ body:             |
     %5:vr128 = nofpexcept ADDPDrr %4, %0, implicit $mxcsr
     $xmm0 = COPY %5
     RET 0, $xmm0
+
     ; CHECK: %2:vr128 = COPY $xmm2
     ; CHECK-NEXT: %1:vr128 = COPY $xmm1
     ; CHECK-NEXT: %0:vr128 = COPY $xmm0
@@ -214,6 +221,7 @@ body:             |
     ; CHECK-NEXT: %5:vr128 = nofpexcept ADDPDrr %4, %0, implicit $mxcsr
     ; CHECK-NEXT: $xmm0 = COPY %5
     ; CHECK-NEXT: RET 0, $xmm0
+
 ...
 ---
 name:            _Z12muladd_test5Dv2_dS_S_
@@ -244,12 +252,14 @@ body:             |
     %4:vr128 = nofpexcept ADDPDrr %3, %2, implicit $mxcsr
     $xmm0 = COPY %4
     RET 0, $xmm0
+
     ; CHECK: %2:vr128 = COPY $xmm2
     ; CHECK-NEXT: %1:vr128 = COPY $xmm1
     ; CHECK-NEXT: %0:vr128 = COPY $xmm0
     ; CHECK-NEXT: %4:vr128 = VFMADD213PDr %0, %1, %2, implicit $mxcsr
     ; CHECK-NEXT: $xmm0 = COPY %4
     ; CHECK-NEXT: RET 0, $xmm0
+
 ...
 ---
 name:            _Z12muladd_test6Dv2_dS_S_
@@ -286,6 +296,7 @@ body:             |
     %7:vr128 = nofpexcept ADDPDrr %6, killed %5, implicit $mxcsr
     $xmm0 = COPY %7
     RET 0, $xmm0
+
     ; CHECK: %2:vr128 = COPY $xmm2
     ; CHECK-NEXT: %1:vr128 = COPY $xmm1
     ; CHECK-NEXT: %0:vr128 = COPY $xmm0
@@ -295,4 +306,5 @@ body:             |
     ; CHECK-NEXT: %7:vr128 = nofpexcept ADDPDrr %6, killed %5, implicit $mxcsr
     ; CHECK-NEXT: $xmm0 = COPY %7
     ; CHECK-NEXT: RET 0, $xmm0
+
 ...
