@@ -1,0 +1,298 @@
+# RUN: llc -mtriple x86_64-unknown-linux-gnu --load=%llvmshlibdir/X86SrednevaMulAddIntrinPass%shlibext -run-pass=x86-muladd-intrin-pass  %s -o - | FileCheck %s
+
+--- |
+  target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
+  target triple = "x86_64-unknown-linux-gnu"
+
+  ; Function Attrs: mustprogress nofree nosync nounwind willreturn memory(none) uwtable
+  define dso_local noundef <2 x double> @_Z12muladd_test1Dv2_dS_S_(<2 x double> noundef %a, <2 x double> noundef %b, <2 x double> noundef %c) local_unnamed_addr #0 {
+  entry:
+    %0 = tail call <2 x double> @llvm.fmuladd.v2f64(<2 x double> %a, <2 x double> %b, <2 x double> %c)
+    ret <2 x double> %0
+  }
+
+  ; Function Attrs: nocallback nofree nosync nounwind speculatable willreturn memory(none)
+  declare <2 x double> @llvm.fmuladd.v2f64(<2 x double>, <2 x double>, <2 x double>) #1
+
+  ; Function Attrs: mustprogress nofree nosync nounwind willreturn memory(none) uwtable
+  define dso_local noundef <2 x double> @_Z12muladd_test2Dv2_dS_S_(<2 x double> noundef %a, <2 x double> noundef %b, <2 x double> noundef %c) local_unnamed_addr #0 {
+  entry:
+    %0 = tail call <2 x double> @llvm.fmuladd.v2f64(<2 x double> %a, <2 x double> %c, <2 x double> %b)
+    ret <2 x double> %0
+  }
+
+  ; Function Attrs: mustprogress nofree nosync nounwind willreturn memory(none) uwtable
+  define dso_local noundef <2 x double> @_Z12muladd_test3Dv2_dS_S_(<2 x double> noundef %a, <2 x double> noundef %b, <2 x double> noundef %c) local_unnamed_addr #0 {
+  entry:
+    %neg = fneg <2 x double> %c
+    %0 = tail call <2 x double> @llvm.fmuladd.v2f64(<2 x double> %a, <2 x double> %b, <2 x double> %neg)
+    ret <2 x double> %0
+  }
+
+  ; Function Attrs: mustprogress nofree nosync nounwind willreturn memory(none) uwtable
+  define dso_local noundef <2 x double> @_Z12muladd_test4Dv2_dS_S_(<2 x double> noundef %a, <2 x double> noundef %b, <2 x double> noundef %c) local_unnamed_addr #0 {
+  entry:
+    %0 = tail call <2 x double> @llvm.fmuladd.v2f64(<2 x double> %a, <2 x double> %b, <2 x double> %c)
+    %add = fadd <2 x double> %0, %a
+    ret <2 x double> %add
+  }
+
+  ; Function Attrs: mustprogress nofree nosync nounwind willreturn memory(none) uwtable
+  define dso_local noundef <2 x double> @_Z12muladd_test5Dv2_dS_S_(<2 x double> noundef %a, <2 x double> noundef %b, <2 x double> noundef %c) local_unnamed_addr #0 {
+  entry:
+    %0 = tail call <2 x double> @llvm.fmuladd.v2f64(<2 x double> %a, <2 x double> %b, <2 x double> %c)
+    ret <2 x double> %0
+  }
+
+  ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none) uwtable
+  define dso_local noundef <2 x double> @_Z12muladd_test6Dv2_dS_S_(<2 x double> noundef %a, <2 x double> noundef %b, <2 x double> noundef %c) local_unnamed_addr #2 {
+  entry:
+    %mul = fmul <2 x double> %a, %b
+    %add = fadd <2 x double> %a, %b
+    %sub = fsub <2 x double> %add, %c
+    %add1 = fadd <2 x double> %mul, %c
+    %add2 = fadd <2 x double> %add1, %sub
+    ret <2 x double> %add2
+  }
+
+  attributes #0 = { mustprogress nofree nosync nounwind willreturn memory(none) uwtable "min-legal-vector-width"="128" "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="x86-64" "target-features"="+cmov,+cx8,+fxsr,+mmx,+sse,+sse2,+x87" "tune-cpu"="generic" }
+  attributes #1 = { nocallback nofree nosync nounwind speculatable willreturn memory(none) }
+  attributes #2 = { mustprogress nofree norecurse nosync nounwind willreturn memory(none) uwtable "min-legal-vector-width"="128" "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="x86-64" "target-features"="+cmov,+cx8,+fxsr,+mmx,+sse,+sse2,+x87" "tune-cpu"="generic" }
+
+  !llvm.module.flags = !{!0, !1, !2, !3}
+
+  !0 = !{i32 1, !"wchar_size", i32 4}
+  !1 = !{i32 8, !"PIC Level", i32 2}
+  !2 = !{i32 7, !"PIE Level", i32 2}
+  !3 = !{i32 7, !"uwtable", i32 2}
+
+...
+---
+name:            _Z12muladd_test1Dv2_dS_S_
+alignment:       16
+tracksRegLiveness: true
+debugInstrRef:   true
+registers:
+  - { id: 0, class: vr128 }
+  - { id: 1, class: vr128 }
+  - { id: 2, class: vr128 }
+  - { id: 3, class: vr128 }
+  - { id: 4, class: vr128 }
+liveins:
+  - { reg: '$xmm0', virtual-reg: '%0' }
+  - { reg: '$xmm1', virtual-reg: '%1' }
+  - { reg: '$xmm2', virtual-reg: '%2' }
+frameInfo:
+  maxAlignment:    1
+machineFunctionInfo: {}
+body:             |
+  bb.0.entry:
+    liveins: $xmm0, $xmm1, $xmm2
+  
+    %2:vr128 = COPY $xmm2
+    %1:vr128 = COPY $xmm1
+    %0:vr128 = COPY $xmm0
+    %3:vr128 = nofpexcept MULPDrr %0, %1, implicit $mxcsr
+    %4:vr128 = nofpexcept ADDPDrr %3, %2, implicit $mxcsr
+    $xmm0 = COPY %4
+    RET 0, $xmm0
+    ; CHECK: %2:vr128 = COPY $xmm2
+    ; CHECK-NEXT: %1:vr128 = COPY $xmm1
+    ; CHECK-NEXT: %0:vr128 = COPY $xmm0
+    ; CHECK-NEXT: %4:vr128 = VFMADD213PDr %0, %1, %2, implicit $mxcsr
+    ; CHECK-NEXT: $xmm0 = COPY %4
+    ; CHECK-NEXT: RET 0, $xmm0
+...
+---
+name:            _Z12muladd_test2Dv2_dS_S_
+alignment:       16
+tracksRegLiveness: true
+debugInstrRef:   true
+registers:
+  - { id: 0, class: vr128 }
+  - { id: 1, class: vr128 }
+  - { id: 2, class: vr128 }
+  - { id: 3, class: vr128 }
+  - { id: 4, class: vr128 }
+liveins:
+  - { reg: '$xmm0', virtual-reg: '%0' }
+  - { reg: '$xmm1', virtual-reg: '%1' }
+  - { reg: '$xmm2', virtual-reg: '%2' }
+frameInfo:
+  maxAlignment:    1
+machineFunctionInfo: {}
+body:             |
+  bb.0.entry:
+    liveins: $xmm0, $xmm1, $xmm2
+  
+    %2:vr128 = COPY $xmm2
+    %1:vr128 = COPY $xmm1
+    %0:vr128 = COPY $xmm0
+    %3:vr128 = nofpexcept MULPDrr %0, %2, implicit $mxcsr
+    %4:vr128 = nofpexcept ADDPDrr %3, %1, implicit $mxcsr
+    $xmm0 = COPY %4
+    RET 0, $xmm0
+    ; CHECK: %2:vr128 = COPY $xmm2
+    ; CHECK-NEXT: %1:vr128 = COPY $xmm1
+    ; CHECK-NEXT: %0:vr128 = COPY $xmm0
+    ; CHECK-NEXT: %4:vr128 = VFMADD213PDr %0, %2, %1, implicit $mxcsr
+    ; CHECK-NEXT: $xmm0 = COPY %4
+    ; CHECK-NEXT: RET 0, $xmm0
+...
+---
+name:            _Z12muladd_test3Dv2_dS_S_
+alignment:       16
+tracksRegLiveness: true
+debugInstrRef:   true
+registers:
+  - { id: 0, class: vr128 }
+  - { id: 1, class: vr128 }
+  - { id: 2, class: vr128 }
+  - { id: 3, class: vr128 }
+  - { id: 4, class: vr128 }
+liveins:
+  - { reg: '$xmm0', virtual-reg: '%0' }
+  - { reg: '$xmm1', virtual-reg: '%1' }
+  - { reg: '$xmm2', virtual-reg: '%2' }
+frameInfo:
+  maxAlignment:    1
+machineFunctionInfo: {}
+body:             |
+  bb.0.entry:
+    liveins: $xmm0, $xmm1, $xmm2
+  
+    %2:vr128 = COPY $xmm2
+    %1:vr128 = COPY $xmm1
+    %0:vr128 = COPY $xmm0
+    %3:vr128 = nofpexcept MULPDrr %0, %1, implicit $mxcsr
+    %4:vr128 = nofpexcept SUBPDrr %3, %2, implicit $mxcsr
+    $xmm0 = COPY %4
+    RET 0, $xmm0
+    ; CHECK: %2:vr128 = COPY $xmm2
+    ; CHECK-NEXT: %1:vr128 = COPY $xmm1
+    ; CHECK-NEXT: %0:vr128 = COPY $xmm0
+    ; CHECK-NEXT: %3:vr128 = nofpexcept MULPDrr %0, %1, implicit $mxcsr
+    ; CHECK-NEXT: %4:vr128 = nofpexcept SUBPDrr %3, %2, implicit $mxcsr
+    ; CHECK-NEXT: $xmm0 = COPY %4
+    ; CHECK-NEXT: RET 0, $xmm0
+...
+---
+name:            _Z12muladd_test4Dv2_dS_S_
+alignment:       16
+tracksRegLiveness: true
+debugInstrRef:   true
+registers:
+  - { id: 0, class: vr128 }
+  - { id: 1, class: vr128 }
+  - { id: 2, class: vr128 }
+  - { id: 3, class: vr128 }
+  - { id: 4, class: vr128 }
+  - { id: 5, class: vr128 }
+liveins:
+  - { reg: '$xmm0', virtual-reg: '%0' }
+  - { reg: '$xmm1', virtual-reg: '%1' }
+  - { reg: '$xmm2', virtual-reg: '%2' }
+frameInfo:
+  maxAlignment:    1
+machineFunctionInfo: {}
+body:             |
+  bb.0.entry:
+    liveins: $xmm0, $xmm1, $xmm2
+  
+    %2:vr128 = COPY $xmm2
+    %1:vr128 = COPY $xmm1
+    %0:vr128 = COPY $xmm0
+    %3:vr128 = nofpexcept MULPDrr %0, %1, implicit $mxcsr
+    %4:vr128 = nofpexcept ADDPDrr %3, %2, implicit $mxcsr
+    %5:vr128 = nofpexcept ADDPDrr %4, %0, implicit $mxcsr
+    $xmm0 = COPY %5
+    RET 0, $xmm0
+    ; CHECK: %2:vr128 = COPY $xmm2
+    ; CHECK-NEXT: %1:vr128 = COPY $xmm1
+    ; CHECK-NEXT: %0:vr128 = COPY $xmm0
+    ; CHECK-NEXT: %4:vr128 = VFMADD213PDr %0, %1, %2, implicit $mxcsr
+    ; CHECK-NEXT: %5:vr128 = nofpexcept ADDPDrr %4, %0, implicit $mxcsr
+    ; CHECK-NEXT: $xmm0 = COPY %5
+    ; CHECK-NEXT: RET 0, $xmm0
+...
+---
+name:            _Z12muladd_test5Dv2_dS_S_
+alignment:       16
+tracksRegLiveness: true
+debugInstrRef:   true
+registers:
+  - { id: 0, class: vr128 }
+  - { id: 1, class: vr128 }
+  - { id: 2, class: vr128 }
+  - { id: 3, class: vr128 }
+  - { id: 4, class: vr128 }
+liveins:
+  - { reg: '$xmm0', virtual-reg: '%0' }
+  - { reg: '$xmm1', virtual-reg: '%1' }
+  - { reg: '$xmm2', virtual-reg: '%2' }
+frameInfo:
+  maxAlignment:    1
+machineFunctionInfo: {}
+body:             |
+  bb.0.entry:
+    liveins: $xmm0, $xmm1, $xmm2
+  
+    %2:vr128 = COPY $xmm2
+    %1:vr128 = COPY $xmm1
+    %0:vr128 = COPY $xmm0
+    %3:vr128 = nofpexcept MULPDrr %0, %1, implicit $mxcsr
+    %4:vr128 = nofpexcept ADDPDrr %3, %2, implicit $mxcsr
+    $xmm0 = COPY %4
+    RET 0, $xmm0
+    ; CHECK: %2:vr128 = COPY $xmm2
+    ; CHECK-NEXT: %1:vr128 = COPY $xmm1
+    ; CHECK-NEXT: %0:vr128 = COPY $xmm0
+    ; CHECK-NEXT: %4:vr128 = VFMADD213PDr %0, %1, %2, implicit $mxcsr
+    ; CHECK-NEXT: $xmm0 = COPY %4
+    ; CHECK-NEXT: RET 0, $xmm0
+...
+---
+name:            _Z12muladd_test6Dv2_dS_S_
+alignment:       16
+tracksRegLiveness: true
+debugInstrRef:   true
+registers:
+  - { id: 0, class: vr128 }
+  - { id: 1, class: vr128 }
+  - { id: 2, class: vr128 }
+  - { id: 3, class: vr128 }
+  - { id: 4, class: vr128 }
+  - { id: 5, class: vr128 }
+  - { id: 6, class: vr128 }
+  - { id: 7, class: vr128 }
+liveins:
+  - { reg: '$xmm0', virtual-reg: '%0' }
+  - { reg: '$xmm1', virtual-reg: '%1' }
+  - { reg: '$xmm2', virtual-reg: '%2' }
+frameInfo:
+  maxAlignment:    1
+machineFunctionInfo: {}
+body:             |
+  bb.0.entry:
+    liveins: $xmm0, $xmm1, $xmm2
+  
+    %2:vr128 = COPY $xmm2
+    %1:vr128 = COPY $xmm1
+    %0:vr128 = COPY $xmm0
+    %3:vr128 = nofpexcept MULPDrr %0, %1, implicit $mxcsr
+    %4:vr128 = nofpexcept ADDPDrr %0, %1, implicit $mxcsr
+    %5:vr128 = nofpexcept SUBPDrr %4, %2, implicit $mxcsr
+    %6:vr128 = nofpexcept ADDPDrr %3, %2, implicit $mxcsr
+    %7:vr128 = nofpexcept ADDPDrr %6, killed %5, implicit $mxcsr
+    $xmm0 = COPY %7
+    RET 0, $xmm0
+    ; CHECK: %2:vr128 = COPY $xmm2
+    ; CHECK-NEXT: %1:vr128 = COPY $xmm1
+    ; CHECK-NEXT: %0:vr128 = COPY $xmm0
+    ; CHECK-NEXT: %6:vr128 = VFMADD213PDr %0, %1, %2, implicit $mxcsr
+    ; CHECK-NEXT: %4:vr128 = nofpexcept ADDPDrr %0, %1, implicit $mxcsr
+    ; CHECK-NEXT: %5:vr128 = nofpexcept SUBPDrr %4, %2, implicit $mxcsr
+    ; CHECK-NEXT: %7:vr128 = nofpexcept ADDPDrr %6, killed %5, implicit $mxcsr
+    ; CHECK-NEXT: $xmm0 = COPY %7
+    ; CHECK-NEXT: RET 0, $xmm0
+...
