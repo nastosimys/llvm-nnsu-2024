@@ -28,7 +28,7 @@
 
 # __m128d muladd_test6(__m128d a, __m128d b, __m128d c) {
 #   __m128d tmp = a * b;
-#   __m128d tmp2 = b + a -c;
+#   __m128d tmp2 = b + a - c;
 #   return tmp + c + tmp2;
 # }
 
@@ -342,5 +342,4 @@ body:             |
     ; CHECK-NEXT: %7:vr128 = nofpexcept ADDPDrr %6, killed %5, implicit $mxcsr
     ; CHECK-NEXT: $xmm0 = COPY %7
     ; CHECK-NEXT: RET 0, $xmm0
-
-...
+  

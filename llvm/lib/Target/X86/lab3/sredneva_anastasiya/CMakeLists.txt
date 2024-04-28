@@ -8,6 +8,6 @@ add_llvm_pass_plugin(${PluginName}
     X86
     BUILDTREE_ONLY)
 
-target_include_directories(${PluginName} PUBLIC ${PATH_TO_X86})
+target_include_directories(${PluginName} PUBLIC ${PATH_TO_X86}) 
 
 set(LLVM_TEST_DEPENDS ${PluginName} ${LLVM_TEST_DEPENDS} PARENT_SCOPE)
