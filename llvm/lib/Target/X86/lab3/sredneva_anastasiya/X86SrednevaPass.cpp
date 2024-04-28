@@ -65,6 +65,7 @@ public:
     return Changed;
   }
 };
+
 } // namespace
 
 char MulAddPass::ID = 0;

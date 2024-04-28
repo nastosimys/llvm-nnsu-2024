@@ -7,7 +7,7 @@
 #__m128d muladd_test2(__m128d a, __m128d b, __m128d c) { return a * c + b; }
 
 #__m128d muladd_test3(__m128d a, __m128d b, __m128d c) {
-#    __m128d neg = - ñ;
+#    __m128d neg = -c;
 #    return a * b + neg;
 #}
 
