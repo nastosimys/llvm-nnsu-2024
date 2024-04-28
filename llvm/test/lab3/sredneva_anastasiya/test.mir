@@ -2,27 +2,35 @@
 
 # test.cpp
 
-# __m128d muladd_test1(__m128d a, __m128d b, __m128d c) { return a * b + c; }
+; __m128d muladd_test1(__m128d a, __m128d b, __m128d c) {
+;   __m128d tmp = a * b + c;
+;   return tmp;
+; }
 
-# __m128d muladd_test2(__m128d a, __m128d b, __m128d c) { return a * c + b; }
+; __m128d muladd_test2(__m128d a, __m128d b, __m128d c) {
+;   __m128d tmp = a * c + b;
+;   return tmp;
+; }
 
-# __m128d muladd_test3(__m128d a, __m128d b, __m128d c) {
-#     __m128d neg = -c;
-#     return a * b + neg;
-# }
+; __m128d muladd_test3(__m128d a, __m128d b, __m128d c) {
+;   __m128d tmp = a * b - c;
+;   return tmp;
+; }
 
-# __m128d muladd_test4(__m128d a, __m128d b, __m128d c) {
-#     __m128d result = a * b + c;
-#     return result + a;
-# }
+; __m128d muladd_test4(__m128d a, __m128d b, __m128d c) {
+;   __m128d tmp = a * b + c + a;
+;   return tmp;
+; }
 
-# __m128d muladd_test5(__m128d a, __m128d b, __m128d c) { return a * b + c; }
+; __m128d muladd_test5(__m128d a, __m128d b, __m128d c) {
+;   return a * b + c;
+; }
 
-# __m128d muladd_test6(__m128d a, __m128d b, __m128d c) {
-#    __m128d tmp = a * b;
-#    __m128d tmp2 = b + a - c;
-#    return tmp + c + tmp2;
-# }
+; __m128d muladd_test6(__m128d a, __m128d b, __m128d c) {
+;   __m128d tmp = a * b;
+;   __m128d tmp2 = b + a -c;
+;   return tmp + c + tmp2;
+; }
 
 
 --- |
@@ -335,4 +343,4 @@ body:             |
     ; CHECK-NEXT: $xmm0 = COPY %7
     ; CHECK-NEXT: RET 0, $xmm0
 
-#...
+...
