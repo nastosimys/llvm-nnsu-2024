@@ -32,6 +32,12 @@
 #   return tmp + c + tmp2;
 # }
 
+# __m128d muladd_test7(__m128d a, __m128d b, __m128d c) {
+#   __m128d tmp = a * b;
+#   __m128d tmp2 = tmp + c;
+#   return tmp + tmp2;
+# }
+
 
 --- |
   ; ModuleID = 'test.ll'
@@ -89,6 +95,15 @@
     %add1 = fadd <2 x double> %mul, %c
     %add2 = fadd <2 x double> %add1, %sub
     ret <2 x double> %add2
+  }
+
+  ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none) uwtable
+  define dso_local noundef <2 x double> @_Z12muladd_test7Dv2_dS_S_(<2 x double> noundef %a, <2 x double> noundef %b, <2 x double> noundef %c) local_unnamed_addr #2 {
+  entry:
+    %mul = fmul <2 x double> %a, %b
+    %add = fadd <2 x double> %mul, %c
+    %add1 = fadd <2 x double> %mul, %add
+    ret <2 x double> %add1
   }
 
   attributes #0 = { mustprogress nofree nosync nounwind willreturn memory(none) uwtable "min-legal-vector-width"="128" "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="x86-64" "target-features"="+cmov,+cx8,+fxsr,+mmx,+sse,+sse2,+x87" "tune-cpu"="generic" }
@@ -343,3 +358,30 @@ body:             |
     ; CHECK-NEXT: $xmm0 = COPY %7
     ; CHECK-NEXT: RET 0, $xmm0
   
+...
+---
+name:            _Z12muladd_test7Dv2_dS_S_
+alignment:       16
+tracksRegLiveness: true
+debugInstrRef:   true
+tracksDebugUserValues: true
+liveins:
+  - { reg: '$xmm0' }
+  - { reg: '$xmm1' }
+  - { reg: '$xmm2' }
+frameInfo:
+  maxAlignment:    1
+  maxCallFrameSize: 0
+machineFunctionInfo: {}
+body:             |
+  bb.0.entry:
+    liveins: $xmm0, $xmm1, $xmm2
+  
+    renamable $xmm0 = nofpexcept MULPDrr killed renamable $xmm0, killed renamable $xmm1, implicit $mxcsr
+    renamable $xmm2 = nofpexcept ADDPDrr killed renamable $xmm2, renamable $xmm0, implicit $mxcsr
+    renamable $xmm0 = nofpexcept ADDPDrr killed renamable $xmm0, killed renamable $xmm2, implicit $mxcsr
+    RET64 $xmm0
+
+    ; CHECK: $xmm2 = VFMADD213PDr $xmm0, $xmm1, $xmm0, implicit $mxcsr
+    ; CHECK-NEXT: renamable $xmm0 = nofpexcept ADDPDrr killed renamable $xmm0, killed renamable $xmm2, implicit $mxcsr
+    ; CHECK-NEXT: RET64 $xmm0
