@@ -1,5 +1,5 @@
 // RUN: split-file %s %t
-// RUN: %clang_cc1 -load %llvmshlibdir/Deprecated_sa%pluginext -plugin deprecated_plugin %t/with_err.cpp -plugin-arg-deprecated_plugin -err 2>&1 | FileCheck %t/with_err.cpp
+// RUN: not %clang_cc1 -load %llvmshlibdir/Deprecated_sa%pluginext -plugin deprecated_plugin %t/with_err.cpp -plugin-arg-deprecated_plugin -err 2>&1 | FileCheck %t/with_err.cpp
 // RUN: %clang_cc1 -load %llvmshlibdir/Deprecated_sa%pluginext -plugin deprecated_plugin %t/without_err.cpp 2>&1 | FileCheck %t/without_err.cpp
 
 //--- with_err.cpp

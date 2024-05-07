@@ -22,7 +22,9 @@ public:
       } else {
         diagnID = diagn.getCustomDiagID(DiagnosticsEngine::Error,
                                         "The function name has 'deprecated'");
-        llvm::errs() << "error: The function name has 'deprecated'\n";
+        //llvm::errs() << "error: The function name has 'deprecated'\n";
+        diagn.Report(fDecl->getLocation(), diagnID)
+            << fDecl->getNameInfo().getAsString();
       }
     }
     return true;
