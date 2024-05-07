@@ -1,5 +1,6 @@
 #include "clang/AST/ASTConsumer.h"
 #include "clang/AST/RecursiveASTVisitor.h"
+#include "clang/Basic/Diagnostic.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/FrontendPluginRegistry.h"
 
@@ -12,16 +13,16 @@ public:
     if (fDecl->getNameInfo().getAsString().find("deprecated") !=
         std::string::npos) {
       DiagnosticsEngine &diagn = fDecl->getASTContext().getDiagnostics();
+      unsigned diagnID;
       if (isWarning) {
-        unsigned diagnID = diagn.getCustomDiagID(
-            DiagnosticsEngine::Warning, "The function name has 'deprecated'");
+        diagnID = diagn.getCustomDiagID(DiagnosticsEngine::Warning,
+                                        "The function name has 'deprecated'");
         diagn.Report(fDecl->getLocation(), diagnID)
             << fDecl->getNameInfo().getAsString();
       } else {
-        unsigned diagnID = diagn.getCustomDiagID(
-            DiagnosticsEngine::Error, "The function name has 'deprecated'");
-        diagn.Report(fDecl->getLocation(), diagnID)
-            << fDecl->getNameInfo().getAsString();
+        diagnID = diagn.getCustomDiagID(DiagnosticsEngine::Error,
+                                        "The function name has 'deprecated'");
+        llvm::errs() << "error: The function name has 'deprecated'\n";
       }
     }
     return true;
@@ -55,7 +56,7 @@ protected:
   bool ParseArgs(const CompilerInstance &CI,
                  const std::vector<std::string> &args) override {
     for (const auto &arg : args) {
-      if (arg == "-error") {
+      if (arg == "-err") {
         isWarning = false;
       }
     }
