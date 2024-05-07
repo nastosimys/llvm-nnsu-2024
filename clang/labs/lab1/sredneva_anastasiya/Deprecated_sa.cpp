@@ -14,17 +14,11 @@ public:
         std::string::npos) {
       DiagnosticsEngine &diagn = fDecl->getASTContext().getDiagnostics();
       unsigned diagnID;
-      if (isWarning) {
-        diagnID = diagn.getCustomDiagID(DiagnosticsEngine::Warning,
-                                        "The function name has 'deprecated'");
-        diagn.Report(fDecl->getLocation(), diagnID)
-            << fDecl->getNameInfo().getAsString();
-      } else {
-        diagnID = diagn.getCustomDiagID(DiagnosticsEngine::Error,
-                                        "The function name has 'deprecated'");
-        diagn.Report(fDecl->getLocation(), diagnID)
-            << fDecl->getNameInfo().getAsString();
-      }
+      diagnID = diagn.getCustomDiagID(isWarning ? DiagnosticsEngine::Warning
+                                                : DiagnosticsEngine::Error,
+                                      "The function name has 'deprecated'");
+      diagn.Report(fDecl->getLocation(), diagnID)
+          << fDecl->getNameInfo().getAsString();
     }
     return true;
   }
