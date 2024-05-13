@@ -19,36 +19,45 @@ class MulAddPass : public MachineFunctionPass {
 public:
   static char ID;
   MulAddPass() : MachineFunctionPass(ID) {}
-
   bool runOnMachineFunction(MachineFunction &MF) override {
     SmallVector<MachineInstr *> deletedInstrPtr;
-
     bool Changed = false;
     for (auto &MBB : MF) {
       for (auto MI = MBB.begin(); MI != MBB.end(); ++MI) {
         if (MI->getOpcode() == X86::MULPDrr) {
-
           Register Reg = MI->getOperand(0).getReg();
           for (auto NextMI = std::next(MI); NextMI != MBB.end(); ++NextMI) {
             if (NextMI->getOpcode() == X86::ADDPDrr) {
-
               if (NextMI->getOperand(1).getReg() == Reg ||
                   NextMI->getOperand(2).getReg() == Reg) {
-
-                MachineInstrBuilder BuilderMI = BuildMI(
-                    MBB, MI, MI->getDebugLoc(),
-                    MF.getSubtarget().getInstrInfo()->get(X86::VFMADD213PDr));
-                BuilderMI.addReg(NextMI->getOperand(0).getReg(),
-                                 RegState::Define);
-                BuilderMI.addReg(MI->getOperand(1).getReg());
-                BuilderMI.addReg(MI->getOperand(2).getReg());
-
-                BuilderMI.addReg(NextMI->getOperand(2).getReg());
-
-                deletedInstrPtr.push_back(&*MI);
-                deletedInstrPtr.push_back(&*NextMI);
-                Changed = true;
-
+                bool hasDependency = false;
+                for (auto CheckMI = std::next(NextMI); CheckMI != MBB.end();
+                     ++CheckMI) {
+                  for (unsigned i = 1; i < CheckMI->getNumOperands(); ++i) {
+                    if (CheckMI->getOperand(i).getReg() == Reg &&
+                        NextMI->getOperand(0).getReg() != Reg) {
+                      hasDependency = true;
+                      break;
+                    }
+                  }
+                  if (hasDependency) {
+                    break;
+                  }
+                }
+                if (!hasDependency) {
+                  MachineInstrBuilder BuilderMI = BuildMI(
+                      MBB, MI, MI->getDebugLoc(),
+                      MF.getSubtarget().getInstrInfo()->get(X86::VFMADD213PDr));
+                  BuilderMI.addReg(NextMI->getOperand(0).getReg(),
+                                   RegState::Define);
+                  BuilderMI.addReg(MI->getOperand(1).getReg());
+                  BuilderMI.addReg(MI->getOperand(2).getReg());
+                  BuilderMI.addReg(NextMI->getOperand(2).getReg());
+                  deletedInstrPtr.push_back(&*MI);
+                  deletedInstrPtr.push_back(&*NextMI);
+                  Changed = true;
+                  break;
+                }
                 break;
               }
             } else if (NextMI->getOperand(1).getReg() == Reg ||
@@ -61,11 +70,9 @@ public:
     }
     for (auto it : deletedInstrPtr)
       it->eraseFromParent();
-
     return Changed;
   }
 };
-
 } // namespace
 
 char MulAddPass::ID = 0;
