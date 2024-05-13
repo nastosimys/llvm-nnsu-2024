@@ -1,6 +1,6 @@
 # RUN: llc -mtriple x86_64-unknown-linux-gnu --load=%llvmshlibdir/X86SrednevaMulAddIntrinPass%shlibext -run-pass=x86-muladd-intrin-pass  %s -o - | FileCheck %s
 
-# test.cpp
+# test.cpp 
 
 # __m128d muladd_test1(__m128d a, __m128d b, __m128d c) {
 #   __m128d tmp = a * b + c;
