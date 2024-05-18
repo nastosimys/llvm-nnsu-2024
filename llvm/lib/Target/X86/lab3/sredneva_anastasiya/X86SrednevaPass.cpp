@@ -31,17 +31,18 @@ public:
               if (NextMI->getOperand(1).getReg() == Reg ||
                   NextMI->getOperand(2).getReg() == Reg) {
                 bool hasDependency = false;
-                for (auto CheckMI = std::next(NextMI); CheckMI != MBB.end();
-                     ++CheckMI) {
-                  for (unsigned i = 1; i < CheckMI->getNumOperands(); ++i) {
-                    if (CheckMI->getOperand(i).getReg() == Reg &&
-                        NextMI->getOperand(0).getReg() != Reg) {
-                      hasDependency = true;
+                if (NextMI->getOperand(0).getReg() != Reg) {
+                  for (auto CheckMI = std::next(NextMI); CheckMI != MBB.end();
+                       ++CheckMI) {
+                    for (unsigned i = 1; i < CheckMI->getNumOperands(); ++i) {
+                      if (CheckMI->getOperand(i).getReg() == Reg) {
+                        hasDependency = true;
+                        break;
+                      }
+                    }
+                    if (hasDependency) {
                       break;
                     }
-                  }
-                  if (hasDependency) {
-                    break;
                   }
                 }
                 if (!hasDependency) {
@@ -60,9 +61,17 @@ public:
                 }
                 break;
               }
-            } else if (NextMI->getOperand(1).getReg() == Reg ||
-                       NextMI->getOperand(2).getReg() == Reg) {
-              break;
+            } else {
+              bool found = false;
+              for (unsigned i = 0, e = NextMI->getNumOperands(); i != e; ++i) {
+                if (NextMI->getOperand(i).getReg() == Reg) {
+                  found = true;
+                  break;
+                }
+              }
+              if (found) {
+                break;
+              }
             }
           }
         }
