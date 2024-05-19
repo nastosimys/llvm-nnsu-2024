@@ -15,31 +15,31 @@ public:
   }
 
   void runOnOperation() override {
-    ModuleOp module = getOperation();
-    module.walk([&](LLVM::LLVMFuncOp funcOp) {
-      int maxDepth = 1;
-      std::function<void(Operation *, int)> calculateDepth = [&](Operation *op,
-                                                                 int depth) {
-        if (auto regionOp = dyn_cast<Region>(op)) {
-          maxDepth = std::max(maxDepth, depth);
-          for (Block &block : regionOp.getBlocks()) {
-            for (Operation &nestedOp : block.getOperations()) {
-              calculateDepth(&nestedOp, depth + 1);
-            }
-          }
-        }
-      };
+    getOperation().walk([&](Operation *op) {
+      if (auto funcOp = dyn_cast<LLVM::LLVMFuncOp>(op)) {
+        int maxDepth = getMaxDepth(funcOp);
+        funcOp->setAttr(
+            "maxDepth",
+            IntegerAttr::get(IntegerType::get(funcOp.getContext(), 32),
+                             maxDepth));
+      }
+    });
+  }
 
-      for (Block &block : funcOp.getBody().getBlocks()) {
-        for (Operation &op : block.getOperations()) {
-          calculateDepth(&op, 1);
+private:
+  int getMaxDepth(LLVM::LLVMFuncOp funcOp) {
+    int maxDepth = 1;
+    int depth = 1;
+    Operation *parent = funcOp;
+    funcOp.walk([&](Operation *op) {
+      if (op.getNumRegions() > 0) {
+        Region &region = op->getRegion(0);
+        if (!region.empty()) {
+          depth++;
         }
       }
-
-      funcOp->setAttr("MaxDepth",
-                      IntegerAttr::get(
-                          IntegerType::get(funcOp.getContext(), 32), maxDepth));
     });
+    return depth;
   }
 };
 } // namespace
