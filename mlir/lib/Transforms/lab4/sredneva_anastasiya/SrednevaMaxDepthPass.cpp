@@ -20,7 +20,7 @@ public:
       int maxDepth = 1;
       std::function<void(Operation *, int)> calculateDepth = [&](Operation *op,
                                                                  int depth) {
-        if (Region *regionOp = dyn_cast<Region>(op)) {
+        if (Region regionOp = dyn_cast<Region>(op)) {
           maxDepth = std::max(maxDepth, depth);
           for (Block &block : regionOp.getBlocks()) {
             for (Operation &nestedOp : block.getOperations()) {
