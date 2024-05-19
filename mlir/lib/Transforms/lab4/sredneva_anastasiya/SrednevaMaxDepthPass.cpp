@@ -1,4 +1,5 @@
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
+#include "mlir/IR/StandardOps.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Tools/Plugins/PassPlugin.h"
 
