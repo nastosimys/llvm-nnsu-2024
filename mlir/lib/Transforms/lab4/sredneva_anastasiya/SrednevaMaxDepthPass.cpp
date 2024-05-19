@@ -1,6 +1,6 @@
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
+#include "mlir/IR/Region.h"
 #include "mlir/Pass/Pass.h"
-#include "mlir/TableGen/Region.h"
 #include "mlir/Tools/Plugins/PassPlugin.h"
 
 using namespace mlir;
@@ -20,7 +20,7 @@ public:
       int maxDepth = 1;
       std::function<void(Operation *, int)> calculateDepth = [&](Operation *op,
                                                                  int depth) {
-        if (RegionOp *regionOp = dyn_cast<RegionOp>(op)) {
+        if (Region *regionOp = dyn_cast<Region>(op)) {
           maxDepth = std::max(maxDepth, depth);
           for (Block &block : regionOp.getBlocks()) {
             for (Operation &nestedOp : block.getOperations()) {
