@@ -12,7 +12,36 @@ public:
   StringRef getDescription() const final {
     return "Counts the max depth of region nests in the function.";
   }
+
   void runOnOperation() override {
+    ModuleOp module = getOperation();
+    module.walk([&](LLVM::LLVMFuncOp funcOp) {
+      int maxDepth = 1;
+      std::function<void(Operation *, int)> calculateDepth = [&](Operation *op,
+                                                                 int depth) {
+        if (auto regionOp = dyn_cast<RegionOp>(op)) {
+          maxDepth = std::max(maxDepth, depth);
+          for (Block &block : regionOp.getBlocks()) {
+            for (Operation &nestedOp : block.getOperations()) {
+              calculateDepth(&nestedOp, depth + 1);
+            }
+          }
+        }
+      };
+
+      for (Block &block : funcOp.getBody().getBlocks()) {
+        for (Operation &op : block.getOperations()) {
+          calculateDepth(&op, 1);
+        }
+      }
+
+      funcOp->setAttr("MaxDepth",
+                      IntegerAttr::get(
+                          IntegerType::get(funcOp.getContext(), 32), maxDepth));
+    });
+  }
+
+  /* void runOnOperation() override {
     FuncOp func = getOperation();
     int maxDepth = getMaxDepth(func.getBody());
     func->setAttr(
@@ -59,7 +88,7 @@ private:
         IntegerAttr::get(IntegerType::get(func.getContext(), 32),
                          maxDepth));
   });*/
-  }
+}
 };
 } // namespace
 
