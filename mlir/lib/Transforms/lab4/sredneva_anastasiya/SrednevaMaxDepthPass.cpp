@@ -28,7 +28,7 @@ public:
 
 private:
   int getMaxDepth(LLVM::LLVMFuncOp *funcOp) {
-    int maxDepth = 1;
+    int maxDepth = 0;
     std::function<void(Operation *, int)> calculateDepth = [&](Operation *op,
                                                                int depth) {
       if (op->getNumRegions() > 0) {
@@ -40,9 +40,9 @@ private:
       }
     };
     for (Operation &op : funcOp->getOps()) {
-      calculateDepth(&op, 2);
+      calculateDepth(&op, 1);
     }
-    return maxDepth;
+    return maxDepth + 1;
   }
 };
 } // namespace
