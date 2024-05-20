@@ -40,9 +40,13 @@ private:
 
       for (Block &block : currentRegion->getBlocks()) {
         for (Operation &op : block) {
+          int nestedDepth = currentDepth;
+          if (op.hasTrait<OpTrait::IsTerminator>()) {
+            nestedDepth++;
+          }
           for (Region &nestedRegion : op.getRegions()) {
             if (!nestedRegion.empty()) {
-              stack.push({&nestedRegion, currentDepth + 1});
+              stack.push({&nestedRegion, nestedDepth});
             }
           }
         }
