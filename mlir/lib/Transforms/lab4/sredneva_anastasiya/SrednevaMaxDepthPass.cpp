@@ -36,7 +36,7 @@ private:
       if (auto callOp = dyn_cast<LLVM::CallOp>(op)) {
         if (auto callee = callOp.getCallee()) {
           if (auto calleeFunc =
-                  funcOp.lookupSymbol<LLVM::LLVMFuncOp>(callee.value())) {
+                  funcOp.lookupSymbolIn<LLVM::LLVMFuncOp>(callee.value())) {
             int depth = getMaxDepth(calleeFunc) + 1;
             maxDepth = std::max(maxDepth, depth);
           }
