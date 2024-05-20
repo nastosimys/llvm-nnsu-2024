@@ -31,6 +31,7 @@ private:
     int maxDepth = 1;
     std::function<void(Operation *, int)> calculateDepth = [&](Operation *op,
                                                                int depth) {
+      maxDepth = std::max(maxDepth, depth);
       if (op->getNumRegions() > 0) {
         Region &region = op->getRegion(0);
         for (Operation &nestedOp : region.front()) {
