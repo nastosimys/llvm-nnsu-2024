@@ -1,4 +1,5 @@
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
+#include "mlir/Dialect/LLVMIR/LLVMOps.h"
 #include "mlir/IR/Region.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Tools/Plugins/PassPlugin.h"
@@ -47,13 +48,13 @@ private:
             inCondition = true;
           }
 
-      if (op->getNumRegions() > 0) {
-        Region &region = op->getRegion(0);
-        for (Operation &nestedOp : region.front()) {
-          calculateDepth(&nestedOp, depth + 1, inLoop, inCondition);
-        }
-      }
-    };
+          if (op->getNumRegions() > 0) {
+            Region &region = op->getRegion(0);
+            for (Operation &nestedOp : region.front()) {
+              calculateDepth(&nestedOp, depth + 1, inLoop, inCondition);
+            }
+          }
+        };
     for (Operation &op : funcOp->getOps()) {
       calculateDepth(&op, 1, false, false);
     }
