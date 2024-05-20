@@ -18,7 +18,7 @@ public:
   void runOnOperation() override {
     getOperation().walk([&](Operation *op) {
       if (auto funcOp = dyn_cast<LLVM::LLVMFuncOp>(op)) {
-        int maxDepth = getMaxDepth(funcOp.getBody());
+        int maxDepth = getMaxDepth(funcOp.getBlocks());
         funcOp->setAttr(
             "maxDepth",
             IntegerAttr::get(IntegerType::get(funcOp.getContext(), 32),
@@ -39,13 +39,15 @@ private:
       maxDepth = std::max(maxDepth, currentDepth);
 
       for (Block &block : currentRegion->getBlocks()) {
-        for (Operation &op : block) {
+        Region *parentRegion =
+            block.getParent()->getParentOp()->getParentRegion();
+        for (Operation &op : parentRegion) {
           int nestedDepth = currentDepth;
           if (op.hasTrait<OpTrait::IsTerminator>()) {
             nestedDepth++;
           }
-          for (Region &nestedRegion : op.getRegions()) {
-            if (!nestedRegion.empty()) {
+          for (Region &nestedRegion : parentRegion->getRegions()) {
+            if (!nestedRegion.getBlocks().empty()) {
               stack.push({&nestedRegion, nestedDepth});
             }
           }
