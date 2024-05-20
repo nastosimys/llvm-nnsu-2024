@@ -28,21 +28,21 @@ public:
 
 private:
   int getMaxDepth(LLVM::LLVMFuncOp *funcOp) {
-    int maxDepth = 0;
+    int maxDepth = 1;
     std::function<void(Operation *, int)> calculateDepth = [&](Operation *op,
                                                                int depth) {
       if (op->getNumRegions() > 0) {
         Region &region = op->getRegion(0);
         for (Operation &nestedOp : region.front()) {
           maxDepth = std::max(maxDepth, depth + 1);
-          calculateDepth(&nestedOp, depth + 1);
+          calculateDepth(&nestedOp, depth + 2);
         }
       }
     };
     for (Operation &op : funcOp->getOps()) {
       calculateDepth(&op, 1);
     }
-    return maxDepth + 1;
+    return maxDepth;
   }
 };
 } // namespace
