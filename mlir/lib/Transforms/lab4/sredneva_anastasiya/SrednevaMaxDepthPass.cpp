@@ -27,20 +27,25 @@ public:
   }
 
 private:
-  int getMaxDepth(Region &region, int currentDepth) {
-    int maxDepth = currentDepth;
-    for (Block &block : region.getBlocks()) {
-      int depth = currentDepth;
-      for (Operation &op : block) {
-        if (op.getNumRegions() > 0) {
+  int getMaxDepth(Region &region) {
+    std::stack<std::pair<Region *, int>> stack;
+    stack.push({&region, 1});
+    int maxDepth = 0;
+
+    while (!stack.empty()) {
+      auto [currentRegion, currentDepth] = stack.top();
+      stack.pop();
+      maxDepth = std::max(maxDepth, currentDepth);
+
+      for (Block &block : currentRegion->getBlocks()) {
+        for (Operation &op : block) {
           for (Region &nestedRegion : op.getRegions()) {
-            int nestedDepth = getMaxDepth(nestedRegion, currentDepth + 1);
-            depth = std::max(depth, nestedDepth);
+            stack.push({&nestedRegion, currentDepth + 1});
           }
         }
       }
-      maxDepth = std::max(maxDepth, depth);
     }
+
     return maxDepth;
   }
 };
