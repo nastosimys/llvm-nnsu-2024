@@ -41,7 +41,9 @@ private:
       for (Block &block : currentRegion->getBlocks()) {
         for (Operation &op : block) {
           for (Region &nestedRegion : op.getRegions()) {
-            stack.push({&nestedRegion, currentDepth + 1});
+            if (!nestedRegion.empty()) {
+              stack.push({&nestedRegion, currentDepth + 1});
+            }
           }
         }
       }
