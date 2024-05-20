@@ -29,6 +29,7 @@ public:
 private:
   int getMaxDepth(LLVM::LLVMFuncOp *funcOp) {
     int maxDepth = 1;
+    bool hasLoops = false;
     std::function<void(Operation *, int)> calculateDepth = [&](Operation *op,
                                                                int depth) {
       if (op->getNumRegions() > 0) {
@@ -39,9 +40,14 @@ private:
         }
       }
     };
-
     for (Operation &op : funcOp->getOps()) {
       calculateDepth(&op, 1);
+      if (op.getName().getStringRef() == "loop") {
+        hasLoops = true;
+      }
+    }
+    if (hasLoops) {
+      maxDepth++;
     }
     return maxDepth;
   }
