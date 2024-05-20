@@ -40,10 +40,13 @@ private:
   }
 
   void computeDepthRecursive(Operation *op, int depth, int &maxDepth) {
-    if (auto forOp = dyn_cast<scf::ForOp>(op) || dyn_cast<scf::IfOp>(op)) {
+    if (dyn_cast<scf::ForOp>(op) || dyn_cast<scf::IfOp>(op)) {
       maxDepth = std::max(maxDepth, depth);
-      for (Operation &nestedOp : op->getRegion().front().front())
-        computeDepthRecursive(&nestedOp, depth + 1, maxDepth);
+      for (Region &region : op->getRegions()) {
+        for (Operation &nestedOp : region.front()) {
+          computeDepthRecursive(&nestedOp, depth + 1, maxDepth);
+        }
+      }
     }
   }
 };
