@@ -17,28 +17,21 @@ public:
   void runOnOperation() override {
     getOperation().walk([&](Operation *op) {
       if (auto funcOp = dyn_cast<LLVM::LLVMFuncOp>(op)) {
-        int maxDepth = getMaxDepth(funcOp);
+        int maxDepth = getMaxDepth(funcOp.getBody());
         funcOp->setAttr(
             "maxDepth",
-            IntegerAttr::get(IntegerType::get(funcOp.getContext(), 32),
-                             maxDepth));
+            IntegerAttr::get(IntegerType::get(op.getContext(), 32), maxDepth));
       }
     });
   }
 
 private:
-  int getMaxDepth(LLVM::LLVMFuncOp funcOp) {
-    int maxDepth = 1;
-    Block &entryBlock = funcOp.getBody().front();
-    for (Operation &op : entryBlock) {
-      if (auto callOp = dyn_cast<LLVM::CallOp>(op)) {
-        if (auto callee = callOp.getCallee()) {
-          if (auto calleeFunc =
-                  funcOp.lookupSymbol<LLVM::LLVMFuncOp>(callee.getValue())) {
-            int depth = getMaxDepth(calleeFunc) + 1;
-            maxDepth = std::max(maxDepth, depth);
-          }
-        }
+  int getMaxRegionDepth(Block &block) {
+    int maxDepth = 0;
+    for (Operation &op : block) {
+      if (auto regionOp = dyn_cast<RegionOp>(op)) {
+        int depth = 1 + getMaxRegionDepth(regionOp.body().front());
+        maxDepth = std::max(maxDepth, depth);
       }
     }
     return maxDepth;
