@@ -29,18 +29,40 @@ public:
 private:
   int getMaxDepth(LLVM::LLVMFuncOp *funcOp) {
     int maxDepth = 1;
-    std::function<void(Operation *, int)> calculateDepth = [&](Operation *op,
-                                                               int depth) {
+    bool hasLoops = false;
+    bool hasConditions = false;
+    std::function<void(Operation *, int, bool, bool)> calculateDepth =
+        [&](Operation *op, int depth, bool inLoop, bool inCondition) {
+          if (inLoop || inCondition) {
+            maxDepth = std::max(maxDepth, depth);
+          }
+
+          if (auto loopOp = dyn_cast<LLVM::LLVMLoopOp>(op)) {
+            hasLoops = true;
+            inLoop = true;
+          }
+
+          if (auto condOp = dyn_cast<LLVM::LLVMIfOp>(op)) {
+            hasConditions = true;
+            inCondition = true;
+          }
+
       if (op->getNumRegions() > 0) {
         Region &region = op->getRegion(0);
         for (Operation &nestedOp : region.front()) {
-          maxDepth = std::max(maxDepth, depth + 1);
-          calculateDepth(&nestedOp, depth + 1);
+          calculateDepth(&nestedOp, depth + 1, inLoop, inCondition);
         }
       }
     };
     for (Operation &op : funcOp->getOps()) {
-      calculateDepth(&op, 2);
+      calculateDepth(&op, 1, false, false);
+    }
+    if (hasLoops) {
+      maxDepth += 1;
+    }
+
+    if (hasConditions) {
+      maxDepth += 1;
     }
     return maxDepth;
   }
