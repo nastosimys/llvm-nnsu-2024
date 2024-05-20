@@ -43,7 +43,7 @@ private:
     for (Operation &op : funcOp->getOps()) {
       calculateDepth(&op, 1);
     }
-    return depth;
+    return maxDepth;
   }
 };
 } // namespace
