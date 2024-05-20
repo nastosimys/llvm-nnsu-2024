@@ -30,9 +30,9 @@ public:
 
 private:
   int getMaxDepth(Operation *op) {
-    int maxDepth = 0;
+    int maxDepth = 1;
     op->walk([&](Operation *nestedOp) {
-      int currentDepth = 0;
+      int currentDepth = 1;
       computeDepthRecursive(nestedOp, 1, currentDepth);
       maxDepth = std::max(maxDepth, currentDepth);
     });
