@@ -29,18 +29,17 @@ public:
 private:
   int getMaxDepth(LLVM::LLVMFuncOp funcOp) {
     int maxDepth = 1;
-    std::function<void(Operation *, int)> calculateDepth = [&](Operation *op,
-                                                               int depth) {
-      if (op->getNumRegions() > 0) {
-        Region &region = op->getRegion(0);
-        for (Operation &nestedOp : region.front()) {
-          maxDepth = std::max(maxDepth, depth + 1);
-          calculateDepth(&nestedOp, depth + 1);
+    Block &entryBlock = funcOp.getBody().front();
+    for (Operation &op : entryBlock) {
+      if (auto callOp = dyn_cast<LLVM::CallOp>(op)) {
+        if (auto callee = callOp.getCallee()) {
+          if (auto calleeFunc =
+                  funcOp.lookupSymbol<LLVM::LLVMFuncOp>(callee.getValue())) {
+            int depth = getMaxDepth(calleeFunc) + 1;
+            maxDepth = std::max(maxDepth, depth);
+          }
         }
       }
-    };
-    for (Operation &op : funcOp->getOps()) {
-      calculateDepth(&op, 1);
     }
     return maxDepth;
   }
