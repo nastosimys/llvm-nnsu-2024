@@ -18,7 +18,7 @@ public:
   void runOnOperation() override {
     getOperation().walk([&](Operation *op) {
       if (auto funcOp = dyn_cast<LLVM::LLVMFuncOp>(op)) {
-        int maxDepth = getMaxDepth(funcOp.getBody());
+        int maxDepth = getMaxDepth(funcOp.getBody(), 1);
         funcOp->setAttr(
             "maxDepth",
             IntegerAttr::get(IntegerType::get(funcOp.getContext(), 32),
@@ -28,33 +28,20 @@ public:
   }
 
 private:
-  int getMaxDepth(Region &region) {
-    std::stack<std::pair<Region *, int>> stack;
-    stack.push({&region, 1});
-    int maxDepth = 0;
+  int getMaxDepth(Block &block, int currentDepth) {
+    int maxDepth = currentDepth;
 
-    while (!stack.empty()) {
-      auto [currentRegion, currentDepth] = stack.top();
-      stack.pop();
-      maxDepth = std::max(maxDepth, currentDepth);
-
-      for (Block &block : currentRegion->getBlocks()) {
-        Region *parentRegion =
-            block.getParent()->getParentOp()->getParentRegion();
-        if (parentRegion != null) {
-          maxDepth++;
-          for (Operation &op : block) {
-            int nestedDepth = currentDepth;
-            if (op.hasTrait<OpTrait::IsTerminator>()) {
-              nestedDepth++;
-            }
-            for (Region &nestedRegion : op.getRegions()) {
-              if (!nestedRegion.empty()) {
-                stack.push({&nestedRegion, nestedDepth});
-              }
-            }
-          }
-        }
+    for (auto &op : block.getOperations()) {
+      if (auto ifOp = dyn_cast<mlir::IfOp>(op)) {
+        int nestedDepth = getMaxDepth(ifOp.thenBlock(), currentDepth + 1);
+        maxDepth = std::max(maxDepth, nestedDepth);
+        if (ifOp.elseRegion().empty())
+          continue;
+        nestedDepth = getMaxDepth(ifOp.elseBlock(), currentDepth + 1);
+        maxDepth = std::max(maxDepth, nestedDepth);
+      } else if (auto loopOp = dyn_cast<mlir::scf::ForOp>(op)) {
+        int nestedDepth = getMaxDepth(loopOp.getLoopBody(), currentDepth + 1);
+        maxDepth = std::max(maxDepth, nestedDepth);
       }
     }
 
