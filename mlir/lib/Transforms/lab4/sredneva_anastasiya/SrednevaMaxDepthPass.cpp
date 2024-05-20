@@ -35,12 +35,12 @@ private:
         Region &region = op->getRegion(0);
         for (Operation &nestedOp : region.front()) {
           maxDepth = std::max(maxDepth, depth + 1);
-          calculateDepth(&nestedOp, depth + 2);
+          calculateDepth(&nestedOp, depth + 1);
         }
       }
     };
     for (Operation &op : funcOp->getOps()) {
-      calculateDepth(&op, 1);
+      calculateDepth(&op, 2);
     }
     return maxDepth;
   }
