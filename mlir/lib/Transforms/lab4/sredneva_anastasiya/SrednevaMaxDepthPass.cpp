@@ -1,9 +1,9 @@
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
+#include "mlir/Dialect/SCF/IR/SCF.h"
 #include "mlir/IR/Operation.h"
 #include "mlir/IR/Region.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Tools/Plugins/PassPlugin.h"
-#include <stack>
 
 using namespace mlir;
 
@@ -29,21 +29,22 @@ public:
   }
 
 private:
-  int getMaxDepth(LLVM::LLVMFuncOp funcOp) {
-    int maxDepth = 1;
-    Block &entryBlock = funcOp.getBody().front();
-    for (Operation &op : entryBlock) {
-      if (auto callOp = dyn_cast<LLVM::CallOp>(op)) {
-        if (auto callee = callOp.getCallee()) {
-          if (auto calleeFunc =
-                  funcOp.lookupSymbolIn<LLVM::LLVMFuncOp>(callee.value())) {
-            int depth = getMaxDepth(calleeFunc) + 1;
-            maxDepth = std::max(maxDepth, depth);
-          }
-        }
-      }
-    }
+  int getMaxDepth(Operation *op) {
+    int maxDepth = 0;
+    op->walk([&](Operation *nestedOp) {
+      int currentDepth = 0;
+      computeDepthRecursive(nestedOp, 1, currentDepth);
+      maxDepth = std::max(maxDepth, currentDepth);
+    });
     return maxDepth;
+  }
+
+  void computeDepthRecursive(Operation *op, int depth, int &maxDepth) {
+    if (auto forOp = dyn_cast<scf::ForOp>(op) || dyn_cast<scf::IfOp>(op)) {
+      maxDepth = std::max(maxDepth, depth);
+      for (Operation &nestedOp : op->getRegion().front().front())
+        computeDepthRecursive(&nestedOp, depth + 1, maxDepth);
+    }
   }
 };
 } // namespace
