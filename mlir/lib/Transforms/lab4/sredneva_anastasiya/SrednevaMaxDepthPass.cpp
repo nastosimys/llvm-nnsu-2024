@@ -1,9 +1,9 @@
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
+#include "mlir/IR/Operation.h"
 #include "mlir/IR/Region.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Tools/Plugins/PassPlugin.h"
 #include <stack>
-#include "mlir/IR/Operation.h"
 
 using namespace mlir;
 
@@ -33,10 +33,10 @@ private:
     int maxDepth = 1;
     Block &entryBlock = funcOp.getBody().front();
     for (Operation &op : entryBlock) {
-      if (auto callOp = dyn_castLLVM::CallOp(op)) {
+      if (auto callOp = dyn_cast<LLVM::CallOp>(op)) {
         if (auto callee = callOp.getCallee()) {
           if (auto calleeFunc =
-                  funcOp.lookupSymbolLLVM::LLVMFuncOp(callee.getValue())) {
+                  funcOp.lookupSymbol<LLVM::LLVMFuncOp>(callee.getValue())) {
             int depth = getMaxDepth(calleeFunc) + 1;
             maxDepth = std::max(maxDepth, depth);
           }
