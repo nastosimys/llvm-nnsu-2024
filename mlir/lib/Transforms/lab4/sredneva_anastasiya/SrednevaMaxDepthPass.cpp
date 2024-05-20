@@ -1,5 +1,4 @@
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
-#include "mlir/Dialect/LLVMIR/LLVMOps.h"
 #include "mlir/IR/Region.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Tools/Plugins/PassPlugin.h"
@@ -30,40 +29,18 @@ public:
 private:
   int getMaxDepth(LLVM::LLVMFuncOp *funcOp) {
     int maxDepth = 1;
-    bool hasLoops = false;
-    bool hasConditions = false;
-    std::function<void(Operation *, int, bool, bool)> calculateDepth =
-        [&](Operation *op, int depth, bool inLoop, bool inCondition) {
-          if (inLoop || inCondition) {
-            maxDepth = std::max(maxDepth, depth);
-          }
-
-          if (auto loopOp = dyn_cast<LLVM::LLVMLoopOp>(op)) {
-            hasLoops = true;
-            inLoop = true;
-          }
-
-          if (auto condOp = dyn_cast<LLVM::LLVMIfOp>(op)) {
-            hasConditions = true;
-            inCondition = true;
-          }
-
-          if (op->getNumRegions() > 0) {
-            Region &region = op->getRegion(0);
-            for (Operation &nestedOp : region.front()) {
-              calculateDepth(&nestedOp, depth + 1, inLoop, inCondition);
-            }
-          }
-        };
+    std::function<void(Operation *, int)> calculateDepth = [&](Operation *op,
+                                                               int depth) {
+      if (op->getNumRegions() > 0) {
+        Region &region = op->getRegion(0);
+        for (Operation &nestedOp : region.front()) {
+          maxDepth = std::max(maxDepth, depth + 1);
+          calculateDepth(&nestedOp, depth + 1);
+        }
+      }
+    };
     for (Operation &op : funcOp->getOps()) {
-      calculateDepth(&op, 1, false, false);
-    }
-    if (hasLoops) {
-      maxDepth += 1;
-    }
-
-    if (hasConditions) {
-      maxDepth += 1;
+      calculateDepth(&op, 2);
     }
     return maxDepth;
   }
