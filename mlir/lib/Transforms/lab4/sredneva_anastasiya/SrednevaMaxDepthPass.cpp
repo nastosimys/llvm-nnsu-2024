@@ -54,7 +54,7 @@ private:
 };
 } // namespace
 
-MLIR_DECLARE_EXPLICIT_TYPE_ID(SrednevaMaxDepthPass)
+MLIR_DECLARE_EXPLICIT_TYPE_ID(SrednevaMaxDepthPass) 
 MLIR_DEFINE_EXPLICIT_TYPE_ID(SrednevaMaxDepthPass)
 
 PassPluginLibraryInfo getFunctionCallCounterPassPluginInfo() {
