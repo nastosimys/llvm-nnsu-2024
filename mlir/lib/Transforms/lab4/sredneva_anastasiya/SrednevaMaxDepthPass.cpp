@@ -21,27 +21,30 @@ public:
   }
 
   void runOnOperation() override {
+
     getOperation()->walk([&](Operation *op) {
-      int maxDepth = 0;
-
-      std::function<void(Operation *, int)> computeMaxDepthRecursive =
-          [&](Operation *op, int currentDepth) {
-            maxDepth = std::max(maxDepth, currentDepth);
-            for (Region &region : op->getRegions()) {
-              for (Block &block : region) {
-                for (Operation &nestedOp : block) {
-                  computeMaxDepthRecursive(&nestedOp, currentDepth + 1);
-                }
-              }
-            }
-          };
-
-      computeMaxDepthRecursive(op, 0);
+      int maxDepth = computeMaxDepth(op);
 
       op->setAttr(
           "sredneva.maxDepth",
           IntegerAttr::get(IntegerType::get(op->getContext(), 32), maxDepth));
     });
+  }
+
+private:
+  int computeMaxDepth(Operation *op, int currentDepth = 0) {
+    int maxDepth = currentDepth;
+
+    for (Region &region : op->getRegions()) {
+      for (Block &block : region) {
+        for (Operation &nestedOp : block) {
+          maxDepth =
+              std::max(maxDepth, computeMaxDepth(&nestedOp, currentDepth + 1));
+        }
+      }
+    }
+
+    return maxDepth;
   }
 };
 } // namespace
