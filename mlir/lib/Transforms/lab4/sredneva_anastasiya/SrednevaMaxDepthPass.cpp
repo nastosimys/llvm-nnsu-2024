@@ -17,39 +17,29 @@ public:
   }
 
   void runOnOperation() override {
-    getOperation().walk([&](Operation *op) {
-      if (auto funcOp = dyn_cast<LLVM::LLVMFuncOp>(op)) {
-        int maxDepth = getMaxDepth(funcOp);
-        funcOp->setAttr(
-            "maxDepth",
-            IntegerAttr::get(IntegerType::get(funcOp.getContext(), 32),
-                             maxDepth));
-      }
-    });
+    MLIRContext context;
+    OpBuilder builder(&context);
+    FuncOp func = builder.create<FuncOp>(builder.getUnknownLoc(), "test_func",
+                                         builder.getFunctionType({}, {}));
+    Block *block = func.addEntryBlock();
+    builder.setInsertionPointToStart(block);
+    int maxDepth = getMaxDepth(func.getOperation(), 1);
+
+    func.setAttr("maxDepth", builder.getI32IntegerAttr(maxDepth));
   }
 
 private:
-  int getMaxDepth(Operation *op) {
-    int maxDepth = 1;
+  int getMaxDepth(Operation *op, int currentDepth) {
+    int maxDepth = currentDepth;
     op->walk([&](Operation *nestedOp) {
-      int currentDepth = 1;
-      computeDepthRecursive(nestedOp, 1, currentDepth);
-      maxDepth = std::max(maxDepth, currentDepth);
-    });
-    return maxDepth;
-  }
-
-  void computeDepthRecursive(Operation *op, int depth, int &maxDepth) {
-    if (dyn_cast<scf::ForOp>(op) || dyn_cast<scf::IfOp>(op)) {
-      maxDepth = std::max(maxDepth, depth);
-      for (Region &region : op->getRegions()) {
-        for (Operation &nestedOp : region.front()) {
-          computeDepthRecursive(&nestedOp, depth + 1, maxDepth);
+      if (nestedOp->getBlock()) {
+        int nestedOpDepth = calculateMaxDepth(nestedOp, currentDepth + 1);
+        if (nestedOpDepth > maxDepth) {
+          maxDepth = nestedOpDepth;
         }
       }
-    } else {
-      maxDepth = std::max(maxDepth, depth);
-    }
+    });
+    return maxDepth;
   }
 };
 } // namespace
