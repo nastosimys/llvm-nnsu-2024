@@ -4,6 +4,10 @@
 #include "mlir/IR/Region.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Tools/Plugins/PassPlugin.h"
+///
+#include "mlir/Dialect/Func/IR/FuncOps.h"
+#include "mlir/IR/PatternMatch.h"
+#include "mlir/IR/BuiltinOps.h"
 
 using namespace mlir;
 
@@ -22,7 +26,7 @@ public:
       int maxDepth = computeMaxDepth(op);
 
       op->setAttr(
-          "max_region_depth",
+          "maxDepth",
           IntegerAttr::get(IntegerType::get(op->getContext(), 32), maxDepth));
     });
   }
