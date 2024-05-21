@@ -17,19 +17,21 @@ public:
   }
 
   void runOnOperation() override {
+    ModuleOp module = getOperation();
     std::map<std::string, int> maxDepthMap;
-    getOperation().walk([&](Operation *op) {
+    module.walk([&](Operation *op) {
       int currentDepth = 0;
       op->walk([&](Operation *childOp) {
         currentDepth++;
         if (currentDepth >
-            maxDepthMap[op->getParentOfType<FuncOp>().getName()]) {
-          maxDepthMap[op->getParentOfType<FuncOp>().getName()] = currentDepth;
+            maxDepthMap[op->getParentOfType<LLVM::LLVMFuncOp>().getName()]) {
+          maxDepthMap[op->getParentOfType<LLVM::LLVMFuncOp>().getName()] =
+              currentDepth;
         }
       });
     });
 
-    module.walk([&](FuncOp funcOp) {
+    module.walk([&](LLVM::LLVMFuncOp funcOp) {
       int maxDepth = maxDepthMap[funcOp.getName().str()];
       funcOp.setAttr("maxDepth",
                      IntegerAttr::get(IntegerType::get(funcOp.getContext(), 32),
