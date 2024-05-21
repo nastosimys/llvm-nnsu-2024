@@ -36,7 +36,7 @@ public:
             }
           };
 
-      computeMaxDepthRecursive(op, 1);
+      computeMaxDepthRecursive(op, 0);
 
       op->setAttr(
           "sredneva.maxDepth",
