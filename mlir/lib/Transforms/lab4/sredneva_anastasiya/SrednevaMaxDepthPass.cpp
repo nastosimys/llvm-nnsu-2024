@@ -9,30 +9,38 @@ using namespace mlir;
 
 namespace {
 class SrednevaMaxDepthPass
-    : public PassWrapper<SrednevaMaxDepthPass, OperationPass<ModuleOp>> {
+    : public PassWrapper<SrednevaMaxDepthPass, OperationPass<func::FuncOp>> {
 public:
   StringRef getArgument() const final { return "SrednevaMaxDepthPass"; }
   StringRef getDescription() const final {
     return "Counts the max depth of region nests in the function.";
   }
 
-  void runOnFunction() override {
-    int maxDepth = 0;
-    getFunction().walk([&](Operation *op) {
-      int currentDepth = 0;
-      Operation *parentOp = op;
-      while (parentOp) {
-        currentDepth++;
-        parentOp = parentOp->getParentOp();
-      }
-      if (currentDepth > maxDepth) {
-        maxDepth = currentDepth;
-      }
-    });
+  void runOnOperation() override {
 
-    getFunction().setAttr(
-        "maxDepth",
-        IntegerAttr::get(IntegerType::get(getContext(), 32), maxDepth));
+    getOperation()->walk([&](Operation *op) {
+      int maxDepth = computeMaxDepth(op);
+
+      op->setAttr(
+          "max_region_depth",
+          IntegerAttr::get(IntegerType::get(op->getContext(), 32), maxDepth));
+    });
+  }
+
+private:
+  int computeMaxDepth(Operation *op, int currentDepth = 0) {
+    int maxDepth = currentDepth;
+
+    for (Region &region : op->getRegions()) {
+      for (Block &block : region) {
+        for (Operation &nestedOp : block) {
+          maxDepth =
+              std::max(maxDepth, computeMaxDepth(&nestedOp, currentDepth + 1));
+        }
+      }
+    }
+
+    return maxDepth;
   }
 };
 } // namespace
