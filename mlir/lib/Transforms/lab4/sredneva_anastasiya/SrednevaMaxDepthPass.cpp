@@ -16,28 +16,23 @@ public:
     return "Counts the max depth of region nests in the function.";
   }
 
-  void runOnOperation() override {
-    ModuleOp module = getOperation();
-    std::map<std::string, int> maxDepthMap;
-    module.walk([&](Operation *op) {
+  void runOnFunction() override {
+    int maxDepth = 0;
+    getFunction().walk([&](Operation *op) {
       int currentDepth = 0;
-      op->walk([&](Operation *childOp) {
+      Operation *parentOp = op;
+      while (parentOp) {
         currentDepth++;
-        if (currentDepth >
-            maxDepthMap[std::string(op->getParentOfType<LLVM::LLVMFuncOp>().getName())] {
-          maxDepthMap[std::string(
-              op->getParentOfType<LLVM::LLVMFuncOp>().getName())] =
-              currentDepth;
-        }
-      });
+        parentOp = parentOp->getParentOp();
+      }
+      if (currentDepth > maxDepth) {
+        maxDepth = currentDepth;
+      }
     });
 
-    module.walk([&](LLVM::LLVMFuncOp funcOp) {
-      int maxDepth = maxDepthMap[funcOp.getName().str()];
-      funcOp.setAttr("maxDepth",
-                     IntegerAttr::get(IntegerType::get(funcOp.getContext(), 32),
-                                      maxDepth));
-    });
+    getFunction().setAttr(
+        "maxDepth",
+        IntegerAttr::get(IntegerType::get(getContext(), 32), maxDepth));
   }
 };
 } // namespace
