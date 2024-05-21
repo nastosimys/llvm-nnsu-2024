@@ -5,9 +5,10 @@
 #include "mlir/Pass/Pass.h"
 #include "mlir/Tools/Plugins/PassPlugin.h"
 ///
-#include "mlir/Dialect/Func/IR/FuncOps.h"
-#include "mlir/IR/PatternMatch.h"
-#include "mlir/IR/BuiltinOps.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h" //
+#include "mlir/IR/BuiltinOps.h"           //
+#include "mlir/IR/PatternMatch.h"         //
+#include <stack>
 
 using namespace mlir;
 
@@ -21,30 +22,27 @@ public:
   }
 
   void runOnOperation() override {
+    SmallVector<std::pair<Operation *, int>, 8> stack;
+    getOperation()->walk([&](Operation *op) { stack.emplace_back(op, 0); });
 
-    getOperation()->walk([&](Operation *op) {
-      int maxDepth = computeMaxDepth(op);
+    while (!stack.empty()) {
+      auto [op, currentDepth] = stack.back();
+      stack.pop_back();
+
+      int maxDepth = currentDepth;
+
+      for (Region &region : op->getRegions()) {
+        for (Block &block : region) {
+          for (Operation &nestedOp : block) {
+            stack.emplace_back(&nestedOp, currentDepth + 1);
+          }
+        }
+      }
 
       op->setAttr(
           "maxDepth",
           IntegerAttr::get(IntegerType::get(op->getContext(), 32), maxDepth));
-    });
-  }
-
-private:
-  int computeMaxDepth(Operation *op, int currentDepth = 0) {
-    int maxDepth = currentDepth;
-
-    for (Region &region : op->getRegions()) {
-      for (Block &block : region) {
-        for (Operation &nestedOp : block) {
-          maxDepth =
-              std::max(maxDepth, computeMaxDepth(&nestedOp, currentDepth + 1));
-        }
-      }
     }
-
-    return maxDepth;
   }
 };
 } // namespace
