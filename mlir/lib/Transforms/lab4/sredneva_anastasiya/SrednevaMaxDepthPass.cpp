@@ -24,8 +24,9 @@ public:
       op->walk([&](Operation *childOp) {
         currentDepth++;
         if (currentDepth >
-            maxDepthMap[op->getParentOfType<LLVM::LLVMFuncOp>().getName()]) {
-          maxDepthMap[op->getParentOfType<LLVM::LLVMFuncOp>().getName()] =
+            maxDepthMap[std::string(op->getParentOfType<LLVM::LLVMFuncOp>().getName())] {
+          maxDepthMap[std::string(
+              op->getParentOfType<LLVM::LLVMFuncOp>().getName())] =
               currentDepth;
         }
       });
