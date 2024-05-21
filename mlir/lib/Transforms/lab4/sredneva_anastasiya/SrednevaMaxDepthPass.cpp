@@ -17,34 +17,28 @@ public:
   }
 
   void runOnOperation() override {
-    MLIRContext context;
-    OpBuilder builder(&context);
-    FuncOp func = builder.create<FuncOp>(builder.getUnknownLoc(), "test_func",
-                                         builder.getFunctionType({}, {}));
-    Block *block = func.addEntryBlock();
-    builder.setInsertionPointToStart(block);
-    int maxDepth = getMaxDepth(func.getOperation(), 1);
-
-    func.setAttr("maxDepth", builder.getI32IntegerAttr(maxDepth));
-  }
-
-private:
-  int getMaxDepth(Operation *op, int currentDepth) {
-    int maxDepth = currentDepth;
-    op->walk([&](Operation *nestedOp) {
-      if (nestedOp->getBlock()) {
-        int nestedOpDepth = calculateMaxDepth(nestedOp, currentDepth + 1);
-        if (nestedOpDepth > maxDepth) {
-          maxDepth = nestedOpDepth;
+    std::map maxDepthMap;
+    getOperation().walk([&](Operation *op) {
+      int currentDepth = 0;
+      op->walk([&](Operation *childOp) {
+        currentDepth++;
+        if (currentDepth > maxDepthMap[op->getParentOfType().getName()]) {
+          maxDepthMap[op->getParentOfType().getName()] = currentDepth;
         }
-      }
+      });
     });
-    return maxDepth;
+
+    module.walk([&](FuncOp funcOp) {
+      int maxDepth = maxDepthMap[funcOp.getName()];
+      funcOp->setAttr("maxDepth",
+                      IntegerAttr::get(
+                          IntegerType::get(funcOp.getContext(), 32), maxDepth));
+    });
   }
 };
 } // namespace
 
-MLIR_DECLARE_EXPLICIT_TYPE_ID(SrednevaMaxDepthPass) 
+MLIR_DECLARE_EXPLICIT_TYPE_ID(SrednevaMaxDepthPass)
 MLIR_DEFINE_EXPLICIT_TYPE_ID(SrednevaMaxDepthPass)
 
 PassPluginLibraryInfo getFunctionCallCounterPassPluginInfo() {
