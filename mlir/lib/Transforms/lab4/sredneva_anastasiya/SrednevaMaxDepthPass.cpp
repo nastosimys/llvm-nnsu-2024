@@ -20,24 +20,44 @@ public:
     return "Counts the max depth of region nests in the function.";
   }
   void runOnOperation() override {
-    getOperation()->walk([&](Operation *op) {
-      int maxDepth = 0;
-      std::function<void(Operation *, int)> getMaxDepth =
-          [&](Operation *op, int depth) {
-            maxDepth = std::max(maxDepth, depth);
-            for (Region &region : op->getRegions()) {
-              for (Block &block : region) {
-                for (Operation &op2 : block) {
-                  getMaxDepth(&op2, depth + 1);
-                }
-              }
-            }
-          };
-      getMaxDepth(op, 0);
-      op->setAttr(
-          "sredneva.maxDepth",
-          IntegerAttr::get(IntegerType::get(op->getContext(), 32), maxDepth));
+    getOperation().walk([&](Operation *op) {
+      if (auto funcOp = dyn_cast<LLVM::LLVMFuncOp>(op)) {
+        int maxDepth = getMaxDepth(funcOp.getBody());
+        funcOp->setAttr(
+            "maxDepth",
+            IntegerAttr::get(IntegerType::get(funcOp.getContext(), 32),
+                             maxDepth));
+      }
     });
+  }
+
+private:
+  int getMaxDepth(Region &region) {
+    std::stack<std::pair<Region *, int>> stack;
+    stack.push({&region, 1});
+    int maxDepth = 0;
+
+    while (!stack.empty()) {
+      auto [currentRegion, currentDepth] = stack.top();
+      stack.pop();
+      maxDepth = std::max(maxDepth, currentDepth);
+
+      for (Block &block : currentRegion->getBlocks()) {
+        for (Operation &op : block) {
+          int nestedDepth = currentDepth;
+          if (op.hasTrait<OpTrait::IsTerminator>()) {
+            nestedDepth++;
+          }
+          for (Region &nestedRegion : op.getRegions()) {
+            if (!nestedRegion.empty()) {
+              stack.push({&nestedRegion, nestedDepth});
+            }
+          }
+        }
+      }
+    }
+
+    return maxDepth;
   }
 };
 } // namespace
