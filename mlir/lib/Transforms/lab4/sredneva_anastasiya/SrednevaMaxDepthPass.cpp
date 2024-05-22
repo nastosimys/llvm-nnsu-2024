@@ -21,7 +21,7 @@ public:
   }
   void runOnOperation() override {
     SmallVector<std::pair<Operation *, int>, 8> stack;
-    getOperation()->walk([&](Operation *op) { stack.emplace_back(op, 0); });
+    getOperation()->walk([&](Operation *op) { stack.emplace_back(op, 1); });
 
     while (!stack.empty()) {
       auto [op, currentDepth] = stack.back();
