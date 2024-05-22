@@ -10,7 +10,7 @@ llvm.func @func2() attributes {passthrough = ["mustprogress", "noinline", "nounw
     // CHECK: llvm.func @func2() attributes {passthrough = ["mustprogress", "noinline", "nounwind", "optnone", ["uwtable", "2"], ["frame-pointer", "all"], ["min-legal-vector-width", "0"], ["no-trapping-math", "true"], ["stack-protector-buffer-size", "8"], ["target-cpu", "x86-64"], ["target-features", "+cmov,+cx8,+fxsr,+mmx,+sse,+sse2,+x87"], ["tune-cpu", "generic"]], sredneva.maxDepth = 2 : i32} {
     %0 = arith.constant 0 : i32
     %1 = arith.constant 5 : i32
-    scf.for %arg1 = %0 to %1 step 1 iter_args(%arg2 = %arg0) -> (i32) {
+    scf.for %i = %arg0 to %arg1 step 1 iter_args(%arg2 = %arg0) -> (i32) {
     %2 = arith.index_cast %arg1 : (i32) -> index
     %3 = arith.addi %arg2, %2 : i32
     scf.yield %3 : i32
