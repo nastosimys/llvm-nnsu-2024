@@ -8,16 +8,17 @@ llvm.func @func1() -> i32 attributes {passthrough = ["mustprogress", "noinline",
   }
 llvm.func @func3() attributes {passthrough = ["mustprogress", "noinline", "nounwind", "optnone", ["uwtable", "2"], ["frame-pointer", "all"], ["min-legal-vector-width", "0"], ["no-trapping-math", "true"], ["stack-protector-buffer-size", "8"], ["target-cpu", "x86-64"], ["target-features", "+cmov,+cx8,+fxsr,+mmx,+sse,+sse2,+x87"], ["tune-cpu", "generic"]]} {
     // CHECK: llvm.func @func3() attributes {passthrough = ["mustprogress", "noinline", "nounwind", "optnone", ["uwtable", "2"], ["frame-pointer", "all"], ["min-legal-vector-width", "0"], ["no-trapping-math", "true"], ["stack-protector-buffer-size", "8"], ["target-cpu", "x86-64"], ["target-features", "+cmov,+cx8,+fxsr,+mmx,+sse,+sse2,+x87"], ["tune-cpu", "generic"]], sredneva.maxDepth = 3 : i32} {
-    %i = constant 5 : index
-    %t = constant 3 : index
-    %c0 = cmpi "sgt", %i, 0 : index
-    %c1 = cmpi "sgt", %t, 0 : index
-    
-    scf.if %c0 {
-      scf.if %c1 {
-        %i_new = subi %i, 1 : index
-      }
-      %t_new = subi %t, 1 : index
+    %cond = arith.constant 1 : i1
+    %0 = scf.if %cond -> (i1) {
+        %1 = scf.if %cond -> (i1) {
+            scf.yield %cond : i1
+        } else {
+            scf.yield %cond : i1
+        }
+        scf.yield %cond : i1
+    } else {
+        scf.yield %cond : i1
     }
+    llvm.return
   }
 }
