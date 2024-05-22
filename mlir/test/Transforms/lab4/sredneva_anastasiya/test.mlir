@@ -11,14 +11,15 @@ func.func @func1(%arg0: i32) -> i32 {
 }
 
 //--- func2.mlir
-func.func @func2(%arg0: i32) -> i32 {
-// CHECK: func.func @func2(%arg0: i32) -> i32 attributes {maxDepth = 2 : i32}
-  %c5_i32 = arith.constant 5 : i32
-  %0 = scf.for %arg1 = %arith.constant 0 : i32 to %c5_i32 step %arith.constant 1 : i32 iter_args(%arg2 = %arg0) -> (i32) {
-    %1 = arith.addi %arg2, %arg1 : i32
-    scf.yield %1 : i32
-  }
-  func.return %0 : i32
+func.func @func2() {
+// CHECK: func.func @func2() attributes {maxDepth = 2 : i32}
+  %cond = arith.constant 1 : i1
+    %0 = scf.if %cond -> (i1) {
+        scf.yield %cond : i1
+    } else {
+        scf.yield %cond : i1
+    }
+    func.return
 }
 
 //--- func3.mlir
