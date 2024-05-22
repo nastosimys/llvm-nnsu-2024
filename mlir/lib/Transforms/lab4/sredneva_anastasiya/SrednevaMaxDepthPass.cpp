@@ -25,7 +25,7 @@ public:
       if (auto funcOp = dyn_cast<LLVM::LLVMFuncOp>(op)) {
         int maxDepth = getMaxDepth(funcOp.getBody());
         funcOp->setAttr(
-            "maxDepth",
+            "sredneva.maxDepth",
             IntegerAttr::get(IntegerType::get(funcOp.getContext(), 32),
                              maxDepth));
       }
