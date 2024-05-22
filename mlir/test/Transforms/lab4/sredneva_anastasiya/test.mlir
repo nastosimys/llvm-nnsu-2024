@@ -1,7 +1,7 @@
 // RUN: split-file %s %t
-// RUN: mlir-opt -load-pass-plugin=%mlir_lib_dir/SrednevaMaxDepthPass%shlibext --pass-pipeline="builtin.module(SrednevaMaxDepthPass)" %t/func1.mlir | FileCheck %t/func1.mlir
-// RUN: mlir-opt -load-pass-plugin=%mlir_lib_dir/SrednevaMaxDepthPass%shlibext --pass-pipeline="builtin.module(SrednevaMaxDepthPass)" %t/func2.mlir | FileCheck %t/func2.mlir
-// RUN: mlir-opt -load-pass-plugin=%mlir_lib_dir/SrednevaMaxDepthPass%shlibext --pass-pipeline="builtin.module(SrednevaMaxDepthPass)" %t/func3t.mlir | FileCheck %t/func3.mlir
+// RUN: mlir-opt -load-pass-plugin=%mlir_lib_dir/SrednevaMaxDepthPass%shlibext --pass-pipeline="builtin.module(func.func(SrednevaMaxDepthPass))" %t/func1.mlir | FileCheck %t/func1.mlir
+// RUN: mlir-opt -load-pass-plugin=%mlir_lib_dir/SrednevaMaxDepthPass%shlibext --pass-pipeline="builtin.module(func.func(SrednevaMaxDepthPass))" %t/func2.mlir | FileCheck %t/func2.mlir
+// RUN: mlir-opt -load-pass-plugin=%mlir_lib_dir/SrednevaMaxDepthPass%shlibext --pass-pipeline="builtin.module(func.func(SrednevaMaxDepthPass))" %t/func3.mlir | FileCheck %t/func3.mlir
 
 //--- func1.mlir
 func.func @func1(%arg0: i32) -> i32 {
