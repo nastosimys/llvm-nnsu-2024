@@ -13,7 +13,7 @@ using namespace mlir;
 
 namespace {
 class SrednevaMaxDepthPass
-    : public PassWrapper<SrednevaMaxDepthPass, OperationPass<ModuleOp>> {
+    : public PassWrapper<SrednevaMaxDepthPass, OperationPass<func::FuncOp>> {
 public:
   StringRef getArgument() const final { return "SrednevaMaxDepthPass"; }
   StringRef getDescription() const final {
