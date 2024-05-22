@@ -1,19 +1,17 @@
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
 #include "mlir/Dialect/SCF/IR/SCF.h"
+#include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/Operation.h"
+#include "mlir/IR/PatternMatch.h"
 #include "mlir/IR/Region.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Tools/Plugins/PassPlugin.h"
-///
-#include "mlir/Dialect/Func/IR/FuncOps.h" //
-#include "mlir/IR/BuiltinOps.h"           //
-#include "mlir/IR/PatternMatch.h"         //
 
 using namespace mlir;
 
 namespace {
 class SrednevaMaxDepthPass
-    : public PassWrapper<SrednevaMaxDepthPass, OperationPass<ModuleOp>> {
+    : public PassWrapper<SrednevaMaxDepthPass, OperationPass<func::FuncOp>> {
 public:
   StringRef getArgument() const final { return "SrednevaMaxDepthPass"; }
   StringRef getDescription() const final {
@@ -23,17 +21,17 @@ public:
     getOperation()->walk([&](Operation *op) {
       int maxDepth = 0;
 
-      std::function<void(Operation *, int)> getMaxDepth =
-          [&](Operation *op, int depth) {
-            maxDepth = std::max(maxDepth, depth);
-            for (Region &region : op->getRegions()) {
-              for (Block &block : region) {
-                for (Operation &op2 : block) {
-                  getMaxDepth(&op2, depth + 1);
-                }
-              }
+      std::function<void(Operation *, int)> getMaxDepth = [&](Operation *op,
+                                                              int depth) {
+        maxDepth = std::max(maxDepth, depth);
+        for (Region &region : op->getRegions()) {
+          for (Block &block : region) {
+            for (Operation &op2 : block) {
+              getMaxDepth(&op2, depth + 1);
             }
-          };
+          }
+        }
+      };
 
       getMaxDepth(op, 0);
 
