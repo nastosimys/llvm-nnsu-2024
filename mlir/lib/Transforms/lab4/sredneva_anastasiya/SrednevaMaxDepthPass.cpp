@@ -1,47 +1,45 @@
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
 #include "mlir/Dialect/SCF/IR/SCF.h"
+#include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/Operation.h"
+#include "mlir/IR/PatternMatch.h"
 #include "mlir/IR/Region.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Tools/Plugins/PassPlugin.h"
-///
-#include "mlir/Dialect/Func/IR/FuncOps.h" //
-#include "mlir/IR/BuiltinOps.h"           //
-#include "mlir/IR/PatternMatch.h"         //
 
 using namespace mlir;
 
 namespace {
 class SrednevaMaxDepthPass
-    : public PassWrapper<SrednevaMaxDepthPass, OperationPass<ModuleOp>> {
+    : public PassWrapper<SrednevaMaxDepthPass, OperationPass<func::FuncOp>> {
 public:
   StringRef getArgument() const final { return "SrednevaMaxDepthPass"; }
   StringRef getDescription() const final {
     return "Counts the max depth of region nests in the function.";
   }
-
   void runOnOperation() override {
-    getOperation()->walk([&](Operation *op) {
-      int maxDepth = 0;
+    SmallVector<std::pair<Operation *, int>, 8> stack;
+    getOperation()->walk([&](Operation *op) { stack.emplace_back(op, 0); });
 
-      std::function<void(Operation *, int)> computeMaxDepthRecursive =
-          [&](Operation *op, int currentDepth) {
-            maxDepth = std::max(maxDepth, currentDepth);
-            for (Region &region : op->getRegions()) {
-              for (Block &block : region) {
-                for (Operation &nestedOp : block) {
-                  computeMaxDepthRecursive(&nestedOp, currentDepth + 1);
-                }
-              }
-            }
-          };
+    while (!stack.empty()) {
+      auto [op, currentDepth] = stack.back();
+      stack.pop_back();
 
-      computeMaxDepthRecursive(op, 0);
+      int maxDepth = currentDepth;
+
+      for (Region &region : op->getRegions()) {
+        for (Block &block : region) {
+          for (Operation &nestedOp : block) {
+            stack.emplace_back(&nestedOp, currentDepth + 1);
+          }
+        }
+      }
 
       op->setAttr(
-          "sredneva.maxDepth",
+          "maxDepth",
           IntegerAttr::get(IntegerType::get(op->getContext(), 32), maxDepth));
-    });
+    }
   }
 };
 } // namespace
