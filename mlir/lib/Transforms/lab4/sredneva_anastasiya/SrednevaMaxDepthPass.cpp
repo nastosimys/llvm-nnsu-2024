@@ -22,18 +22,14 @@ public:
     getOperation()->walk([&](Operation *op) {
       int maxDepth = 0;
       int depth = 0;
-
-      std::function<void(Operation *, int)> getMaxDepth = [&](Operation *op,
-                                                              depth) {
-        maxDepth = std::max(maxDepth, depth);
-        for (Region &region : op->getRegions()) {
-          for (Block &block : region) {
-            for (Operation &op2 : block) {
-              getMaxDepth(&op2, depth + 1);
-            }
+      maxDepth = std::max(maxDepth, depth);
+      for (Region &region : op->getRegions()) {
+        for (Block &block : region) {
+          for (Operation &op2 : block) {
+            getMaxDepth(&op2, depth + 1);
           }
         }
-      };
+      }
       op->setAttr(
           "maxDepth",
           IntegerAttr::get(IntegerType::get(op->getContext(), 32), maxDepth));
