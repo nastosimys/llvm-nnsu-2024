@@ -33,7 +33,7 @@ public:
             for (Operation &op2 : block) {
               stack.push({&op2, depth + 1});
             }
-          }
+          } 
         }
       }
       op->setAttr(
