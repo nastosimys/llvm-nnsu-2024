@@ -7,7 +7,6 @@
 #include "mlir/IR/Region.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Tools/Plugins/PassPlugin.h"
-#include <stack>
 
 using namespace mlir;
 
@@ -20,27 +19,25 @@ public:
     return "Counts the max depth of region nests in the function.";
   }
   void runOnOperation() override {
-    SmallVector<std::pair<Operation *, int>, 8> stack;
-    getOperation()->walk([&](Operation *op) { stack.emplace_back(op, 1); });
+    getOperation()->walk([&](Operation *op) {
+      int maxDepth = 0;
+      int depth = 0;
 
-    while (!stack.empty()) {
-      auto [op, currentDepth] = stack.back();
-      stack.pop_back();
-
-      int maxDepth = currentDepth;
-
-      for (Region &region : op->getRegions()) {
-        for (Block &block : region) {
-          for (Operation &nestedOp : block) {
-            stack.emplace_back(&nestedOp, currentDepth + 1);
+      std::function<void(Operation *, int)> getMaxDepth = [&](Operation *op,
+                                                              depth) {
+        maxDepth = std::max(maxDepth, depth);
+        for (Region &region : op->getRegions()) {
+          for (Block &block : region) {
+            for (Operation &op2 : block) {
+              getMaxDepth(&op2, depth + 1);
+            }
           }
         }
-      }
-
+      };
       op->setAttr(
           "maxDepth",
           IntegerAttr::get(IntegerType::get(op->getContext(), 32), maxDepth));
-    }
+    });
   }
 };
 } // namespace
