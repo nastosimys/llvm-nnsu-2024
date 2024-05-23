@@ -7,6 +7,7 @@
 #include "mlir/IR/Region.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Tools/Plugins/PassPlugin.h"
+#include <stack>
 
 using namespace mlir;
 
@@ -20,17 +21,26 @@ public:
   }
   void runOnOperation() override {
     getOperation()->walk([&](Operation *op) {
+      std::stack<std::pair<Operation *, int>> stack;
+      stack.push({op, 0});
+
       int maxDepth = 0;
-      int depth = 0;
-      while (op) {
-        if (auto *regionOp = dyn_cast<RegionContainingOpInterface>(op)) {
-          depth++;
-          op = regionOp.getRegion().front().getTerminator();
-        } else {
-          break;
+
+      while (!stack.empty()) {
+        auto [currentOp, depth] = stack.top();
+        stack.pop();
+
+        maxDepth = std::max(maxDepth, depth);
+
+        for (Region &region : currentOp->getRegions()) {
+          for (Block &block : region) {
+            for (Operation &op2 : block) {
+              stack.push({&op2, depth + 1});
+            }
+          }
         }
       }
-      maxDepth = std::max(maxDepth, depth);
+
       op->setAttr(
           "maxDepth",
           IntegerAttr::get(IntegerType::get(op->getContext(), 32), maxDepth));
