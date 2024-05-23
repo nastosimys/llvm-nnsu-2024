@@ -22,14 +22,15 @@ public:
     getOperation()->walk([&](Operation *op) {
       int maxDepth = 0;
       int depth = 0;
-      for (Region &region : op->getRegions()) {
-        for (Block &block : region) {
-          for (Operation &op2 : block) {
-            depth++;
-          }
+      while (op) {
+        if (auto *regionOp = dyn_cast<RegionContainingOpInterface>(op)) {
+          depth++;
+          op = regionOp.getRegion().front().getTerminator();
+        } else {
+          break;
         }
-        maxDepth = std::max(maxDepth, depth);
       }
+      maxDepth = std::max(maxDepth, depth);
       op->setAttr(
           "maxDepth",
           IntegerAttr::get(IntegerType::get(op->getContext(), 32), maxDepth));
